@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
@@ -24,6 +24,7 @@ export default function TopicPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
+  const ctx = useContext(EscolaLMSContext);
   const {
     fetchProgram,
     program,
@@ -34,7 +35,8 @@ export default function TopicPage() {
     user,
     fetchMyCourses,
     myCourses,
-  } = useContext(EscolaLMSContext);
+  } = ctx;
+  const topicPing = (ctx as unknown as { topicPing?: (id: number) => void }).topicPing;
 
   useEffect(() => {
     setLoading(true);
@@ -50,36 +52,33 @@ export default function TopicPage() {
   const prevTopic = getNextPrevTopic(currentTopicId, false);
   const nextTopic = getNextPrevTopic(currentTopicId, true);
 
-  // Read progress directly from courseProgressDetails.byId[courseId]
   const topicProgressList: API.CourseProgressItemElement[] = useMemo(() => {
-    const details = courseProgressDetails as any;
+    const details = courseProgressDetails as unknown as {
+      byId?: Record<number, { value?: API.CourseProgressItemElement[] }>;
+    };
     return details?.byId?.[courseId]?.value ?? [];
   }, [courseProgressDetails, courseId]);
 
-  const isTopicFinished = (tid: number) =>
-    topicProgressList.some((p) => p.topic_id === tid && p.status === 1);
+  const isTopicFinished = useCallback(
+    (tid: number) => topicProgressList.some((p) => p.topic_id === tid && p.status === 1),
+    [topicProgressList]
+  );
 
   const progressPct = useMemo(() => {
     if (!allTopics.length) return 0;
     const done = allTopics.filter((t) => isTopicFinished(t.id)).length;
     return Math.round((done / allTopics.length) * 100);
-  }, [allTopics, topicProgressList]);
-
-  async function handleMarkComplete() {
-    await sendProgress(courseId, [{ topic_id: currentTopicId, status: 1 }]);
-    await fetchCourseProgress(courseId);
-    if (nextTopic) {
-      router.push(`/courses/${courseId}/topics/${nextTopic.id}`);
-    }
-  }
+  }, [allTopics, isTopicFinished]);
 
   const isEnrolled = useMemo(() => {
-    const val = (myCourses as any)?.value;
+    const val = (myCourses as unknown as { value?: unknown })?.value;
     if (!val) return false;
-    if (Array.isArray(val?.ids)) return val.ids.includes(courseId);
+    if (Array.isArray((val as { ids?: number[] }).ids)) {
+      return (val as { ids: number[] }).ids.includes(courseId);
+    }
     if (Array.isArray(val)) {
-      return val.some((item: any) =>
-        typeof item === "number" ? item === courseId : item?.id === courseId
+      return (val as unknown[]).some((item) =>
+        typeof item === "number" ? item === courseId : (item as { id?: number })?.id === courseId
       );
     }
     return false;
@@ -87,6 +86,26 @@ export default function TopicPage() {
 
   const isFinished = isTopicFinished(currentTopicId);
   const isLocked = !isEnrolled && !topic?.preview;
+
+  // topicPing every 30s for time-on-topic analytics
+  useEffect(() => {
+    if (!topic || isLocked || !topicPing) return;
+    topicPing(currentTopicId);
+    const interval = setInterval(() => topicPing(currentTopicId), 30_000);
+    return () => clearInterval(interval);
+  }, [currentTopicId, isLocked, topic, topicPing]);
+
+  const handleMarkComplete = useCallback(async () => {
+    await sendProgress(courseId, [{ topic_id: currentTopicId, status: 1 }]);
+    await fetchCourseProgress(courseId);
+    if (nextTopic) {
+      router.push(`/courses/${courseId}/topics/${nextTopic.id}`);
+    }
+  }, [courseId, currentTopicId, nextTopic, sendProgress, fetchCourseProgress, router]);
+
+  const handleVideoEnded = useCallback(() => {
+    if (!isFinished) handleMarkComplete();
+  }, [isFinished, handleMarkComplete]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>;
@@ -96,7 +115,9 @@ export default function TopicPage() {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <p className="text-gray-500">Course not found.</p>
-        <Link href="/" className="text-[#1abc9c] hover:underline">Back to courses</Link>
+        <Link href="/" className="text-[#1abc9c] hover:underline">
+          Back to courses
+        </Link>
       </div>
     );
   }
@@ -105,7 +126,9 @@ export default function TopicPage() {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <p className="text-gray-500">Topic not found.</p>
-        <Link href={`/courses/${courseId}`} className="text-[#1abc9c] hover:underline">Back to course</Link>
+        <Link href={`/courses/${courseId}`} className="text-[#1abc9c] hover:underline">
+          Back to course
+        </Link>
       </div>
     );
   }
@@ -124,9 +147,13 @@ export default function TopicPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="flex items-center px-6 py-3 bg-white border-b border-gray-100 shrink-0">
           <nav className="text-sm text-gray-400">
-            <Link href="/" className="hover:text-[#1abc9c] transition-colors">Courses</Link>
+            <Link href="/" className="hover:text-[#1abc9c] transition-colors">
+              Courses
+            </Link>
             <span className="mx-2">›</span>
-            <Link href={`/courses/${courseId}`} className="hover:text-[#1abc9c] transition-colors">{course.title}</Link>
+            <Link href={`/courses/${courseId}`} className="hover:text-[#1abc9c] transition-colors">
+              {course.title}
+            </Link>
             <span className="mx-2">›</span>
             <span className="text-[#04323e]">{topic.title}</span>
           </nav>
@@ -149,7 +176,7 @@ export default function TopicPage() {
                 </Link>
               </div>
             ) : (
-              <TopicContent topic={topic} />
+              <TopicContent topic={topic} onVideoEnded={handleVideoEnded} />
             )}
 
             {topic.resources && topic.resources.length > 0 && (
@@ -158,7 +185,12 @@ export default function TopicPage() {
                 <ul className="space-y-2">
                   {topic.resources.map((r) => (
                     <li key={r.id}>
-                      <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-[#1abc9c] hover:underline text-sm">
+                      <a
+                        href={r.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#1abc9c] hover:underline text-sm"
+                      >
                         {r.name}
                       </a>
                     </li>
@@ -172,11 +204,17 @@ export default function TopicPage() {
         <footer className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-100 shrink-0">
           <div>
             {prevTopic ? (
-              <Link href={`/courses/${courseId}/topics/${prevTopic.id}`} className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors">
+              <Link
+                href={`/courses/${courseId}/topics/${prevTopic.id}`}
+                className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors"
+              >
                 ← {prevTopic.title}
               </Link>
             ) : (
-              <Link href={`/courses/${courseId}`} className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors">
+              <Link
+                href={`/courses/${courseId}`}
+                className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors"
+              >
                 ← Back to course
               </Link>
             )}
@@ -198,11 +236,17 @@ export default function TopicPage() {
 
           <div>
             {nextTopic ? (
-              <Link href={`/courses/${courseId}/topics/${nextTopic.id}`} className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors">
+              <Link
+                href={`/courses/${courseId}/topics/${nextTopic.id}`}
+                className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors"
+              >
                 {nextTopic.title} →
               </Link>
             ) : (
-              <Link href={`/courses/${courseId}`} className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors">
+              <Link
+                href={`/courses/${courseId}`}
+                className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors"
+              >
                 Finish course →
               </Link>
             )}

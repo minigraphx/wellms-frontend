@@ -6,6 +6,11 @@ import { TopicType } from "@escolalms/sdk/lib/types/enums";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { SCORMPlayer } from "@escolalms/sdk/lib/react";
 
+interface TopicContentProps {
+  topic: API.Topic;
+  onVideoEnded?: () => void;
+}
+
 function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
   const { fetchH5P, h5p, apiUrl } = useContext(EscolaLMSContext);
   const uuid = topic.topicable.content.uuid;
@@ -17,7 +22,6 @@ function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
     setLoading(false);
   }, [uuid]);
 
-  // H5PObject.url holds the player base URL; embed via iframe
   const h5pData = h5p?.value;
   const embedUrl = h5pData?.url
     ? h5pData.url
@@ -41,7 +45,7 @@ function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
   );
 }
 
-export function TopicContent({ topic }: { topic: API.Topic }) {
+export function TopicContent({ topic, onVideoEnded }: TopicContentProps) {
   if (!topic.topicable_type) {
     return <p className="text-gray-500">No content available.</p>;
   }
@@ -63,6 +67,7 @@ export function TopicContent({ topic }: { topic: API.Topic }) {
           src={t.topicable.url}
           poster={t.topicable.poster_url}
           controls
+          onEnded={onVideoEnded}
           className="w-full rounded-lg aspect-video bg-black"
         />
       );
