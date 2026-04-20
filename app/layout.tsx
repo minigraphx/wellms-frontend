@@ -12,6 +12,13 @@ const figtree = Figtree({
 export const metadata: Metadata = {
   title: "Wellms",
   description: "Learning Management System",
+  manifest: "/manifest.json",
+  themeColor: "#1abc9c",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Wellms",
+  },
 };
 
 export default function RootLayout({

@@ -37,6 +37,11 @@ function TopicRow({
   );
 }
 
+function isDripLocked(lesson: API.Lesson): boolean {
+  if (!lesson.active_from) return false;
+  return new Date(lesson.active_from) > new Date();
+}
+
 function LessonSection({
   lesson,
   courseId,
@@ -49,6 +54,23 @@ function LessonSection({
   depth?: number;
 }) {
   const [open, setOpen] = useState(depth === 0);
+  const drip = isEnrolled && isDripLocked(lesson);
+
+  if (drip) {
+    return (
+      <div className="border border-gray-100 rounded-xl overflow-hidden mb-3 opacity-60">
+        <div className="flex items-center justify-between px-5 py-4 bg-gray-50">
+          <div>
+            <span className="font-semibold text-[#04323e]">{lesson.title}</span>
+            <p className="text-xs text-gray-400 mt-0.5">
+              🕐 Unlocks {new Date(lesson.active_from!).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+            </p>
+          </div>
+          <span className="text-gray-300">🔒</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border border-gray-100 rounded-xl overflow-hidden mb-3">

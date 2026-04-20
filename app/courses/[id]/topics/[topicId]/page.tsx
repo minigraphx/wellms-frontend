@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { LessonNav } from "../../../../components/LessonNav";
 import { TopicContent } from "../../../../components/TopicContent";
+import { BookmarkButton } from "../../../../components/BookmarkButton";
 import { useToast } from "../../../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
@@ -180,6 +181,9 @@ export default function TopicPage() {
             <span className="text-[#04323e] truncate">{topic.title}</span>
           </nav>
 
+          <div className="flex items-center gap-3 ml-4 shrink-0">
+            {!isLocked && <BookmarkButton topicId={currentTopicId} />}
+
           {/* User menu in player header */}
           {u && (
             <div className="relative shrink-0 ml-4" ref={userMenuRef}>
@@ -223,6 +227,7 @@ export default function TopicPage() {
               )}
             </div>
           )}
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">

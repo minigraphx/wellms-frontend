@@ -29,12 +29,14 @@ export default function CoursePage() {
     addCourseAccess,
     fetchMyCourses,
     myCourses,
+    fetchMyProducts,
   } = useContext(EscolaLMSContext);
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [accessExpiry, setAccessExpiry] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -55,6 +57,13 @@ export default function CoursePage() {
     if (!mounted || !user.value) return;
     fetchCourseProgress(courseId);
     fetchMyCourses();
+    fetchMyProducts({}).then((res: any) => {
+      const products: API.Product[] = res?.data ?? [];
+      const match = products.find((p) =>
+        p.productables?.some((item) => item.productable_id === courseId)
+      );
+      setAccessExpiry(match?.end_date ?? null);
+    });
   }, [mounted, courseId, user.value]);
 
   const course = program.value;
@@ -216,7 +225,10 @@ export default function CoursePage() {
 
           {course.author && (
             <p className="text-sm text-gray-400">
-              By <span className="font-medium text-[#555555]">{course.author.first_name} {course.author.last_name}</span>
+              By{" "}
+              <Link href={`/instructors/${course.author.id}`} className="font-medium text-[#555555] hover:text-[#1abc9c] transition-colors">
+                {course.author.first_name} {course.author.last_name}
+              </Link>
             </p>
           )}
         </div>
@@ -236,6 +248,12 @@ export default function CoursePage() {
                 <div className="h-full bg-[#1abc9c] rounded-full transition-all" style={{ width: `${progressPct}%` }} />
               </div>
             </div>
+          )}
+
+          {accessExpiry && isEnrolled && (
+            <p className="text-xs text-gray-400 text-center">
+              Access expires {new Date(accessExpiry).toLocaleDateString()}
+            </p>
           )}
 
           {renderCTA()}

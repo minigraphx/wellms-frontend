@@ -136,6 +136,13 @@ export function Nav() {
                       Orders
                     </Link>
                     <Link
+                      href="/bookmarks"
+                      onClick={() => setShowDropdown(false)}
+                      className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                    >
+                      Bookmarks
+                    </Link>
+                    <Link
                       href="/profile"
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"

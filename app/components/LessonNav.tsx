@@ -52,6 +52,15 @@ function TopicLink({
   );
 }
 
+function isDripLocked(lesson: API.Lesson): boolean {
+  if (!lesson.active_from) return false;
+  return new Date(lesson.active_from) > new Date();
+}
+
+function formatUnlockDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
 function LessonGroup({
   lesson,
   courseId,
@@ -71,6 +80,21 @@ function LessonGroup({
     lesson.topics?.some((t) => t.id === activeTopicId) ||
     lesson.lessons?.some((l) => l.topics?.some((t) => t.id === activeTopicId));
   const [open, setOpen] = useState(containsActive ?? depth === 0);
+  const drip = isEnrolled && isDripLocked(lesson);
+
+  if (drip) {
+    return (
+      <div className={`${depth > 0 ? "ml-3 border-l border-gray-100 pl-2" : ""} opacity-60`}>
+        <div className="px-2 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400 flex items-center gap-1.5">
+          <span>🕐</span>
+          <span>{lesson.title}</span>
+        </div>
+        <p className="px-2 pb-2 text-xs text-gray-400">
+          Unlocks {formatUnlockDate(lesson.active_from!)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={depth > 0 ? "ml-3 border-l border-gray-100 pl-2" : ""}>
