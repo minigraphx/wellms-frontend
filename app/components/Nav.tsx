@@ -1,21 +1,35 @@
 "use client";
 
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { LoginForm } from "./LoginForm";
+import { CartDrawer } from "./CartDrawer";
+import type { API } from "@escolalms/sdk/lib";
 
 export function Nav() {
-  const { user, logout, fetchMyCourses } = useContext(EscolaLMSContext);
+  const { user, logout, fetchMyCourses, cart, fetchCart } = useContext(EscolaLMSContext);
   const [showLogin, setShowLogin] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showCart, setShowCart] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && user.value) fetchCart();
+  }, [mounted, user.value]);
+
+  const cartCount = useMemo(() => {
+    const data = (cart as unknown as { value?: API.Cart })?.value;
+    return data?.items?.length ?? 0;
+  }, [cart]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -59,6 +73,23 @@ export function Nav() {
               <line x1="13.5" y1="13.5" x2="18" y2="18" />
             </svg>
           </Link>
+
+          <button
+            onClick={() => setShowCart(true)}
+            aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
+            className="relative text-[#555555] hover:text-[#1abc9c] transition-colors"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {cartCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#1abc9c] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
           {loggedIn ? (
             <>
               <Link
@@ -90,6 +121,20 @@ export function Nav() {
                         {u?.first_name || u?.email}
                       </p>
                     </div>
+                    <Link
+                      href="/shop"
+                      onClick={() => setShowDropdown(false)}
+                      className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                    >
+                      Shop
+                    </Link>
+                    <Link
+                      href="/orders"
+                      onClick={() => setShowDropdown(false)}
+                      className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                    >
+                      Orders
+                    </Link>
                     <Link
                       href="/profile"
                       onClick={() => setShowDropdown(false)}
@@ -157,6 +202,18 @@ export function Nav() {
               <Link href="/dashboard" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 My courses
               </Link>
+              <Link href="/shop" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                Shop
+              </Link>
+              <button
+                onClick={() => { setShowCart(true); setShowMobileMenu(false); }}
+                className="text-left text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1"
+              >
+                Cart {cartCount > 0 && `(${cartCount})`}
+              </button>
+              <Link href="/orders" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                Orders
+              </Link>
               <Link href="/profile" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 Profile
               </Link>
@@ -185,6 +242,9 @@ export function Nav() {
           )}
         </div>
       )}
+
+      {/* Cart drawer */}
+      <CartDrawer open={showCart} onClose={() => setShowCart(false)} />
 
       {/* Login modal */}
       {showLogin && (
