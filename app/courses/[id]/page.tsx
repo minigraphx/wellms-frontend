@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCurriculum } from "../../components/CourseCurriculum";
+import { useToast } from "../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -29,6 +30,7 @@ export default function CoursePage() {
     fetchMyCourses,
     myCourses,
   } = useContext(EscolaLMSContext);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState("");
@@ -107,11 +109,14 @@ export default function CoursePage() {
       if (res.success || msg.toLowerCase().includes("already")) {
         await fetchMyCourses();
         await fetchCourseProgress(courseId);
+        toast("You're enrolled! Start learning below.");
       } else {
         setEnrollError("Enrollment failed. Please try again.");
+        toast("Enrollment failed. Please try again.", "error");
       }
     } catch {
       setEnrollError("Enrollment failed. Please try again.");
+      toast("Enrollment failed. Please try again.", "error");
     } finally {
       setEnrolling(false);
     }

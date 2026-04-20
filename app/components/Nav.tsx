@@ -47,6 +47,18 @@ export function Nav() {
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-4">
+          <Link
+            href="/search"
+            aria-label="Search courses"
+            className={`text-sm transition-colors ${
+              pathname === "/search" ? "text-[#1abc9c]" : "text-[#555555] hover:text-[#1abc9c]"
+            }`}
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8.5" cy="8.5" r="5.5" />
+              <line x1="13.5" y1="13.5" x2="18" y2="18" />
+            </svg>
+          </Link>
           {loggedIn ? (
             <>
               <Link
@@ -139,6 +151,9 @@ export function Nav() {
                 </div>
                 <p className="text-sm font-semibold text-[#04323e] truncate">{u?.first_name || u?.email}</p>
               </div>
+              <Link href="/search" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                Search courses
+              </Link>
               <Link href="/dashboard" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 My courses
               </Link>
@@ -160,6 +175,9 @@ export function Nav() {
               >
                 Sign in
               </button>
+              <Link href="/search" className="text-center text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                Search courses
+              </Link>
               <Link href="/register" className="text-center text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 Create account
               </Link>

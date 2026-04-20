@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { LessonNav } from "../../../../components/LessonNav";
 import { TopicContent } from "../../../../components/TopicContent";
+import { useToast } from "../../../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -22,6 +23,7 @@ export default function TopicPage() {
   const courseId = Number(id);
   const currentTopicId = Number(topicId);
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -118,9 +120,13 @@ export default function TopicPage() {
     await sendProgress(courseId, [{ topic_id: currentTopicId, status: 1 }]);
     await fetchCourseProgress(courseId);
     if (nextTopic) {
+      toast("Lesson complete! Moving to next topic.");
       router.push(`/courses/${courseId}/topics/${nextTopic.id}`);
+    } else {
+      toast("Course complete! 🎉", "success");
+      router.push(`/courses/${courseId}/complete`);
     }
-  }, [courseId, currentTopicId, nextTopic, sendProgress, fetchCourseProgress, router]);
+  }, [courseId, currentTopicId, nextTopic, sendProgress, fetchCourseProgress, router, toast]);
 
   const handleVideoEnded = useCallback(() => {
     if (!isFinished) handleMarkComplete();
