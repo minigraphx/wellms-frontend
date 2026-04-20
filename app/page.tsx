@@ -1,65 +1,121 @@
-import Image from "next/image";
+"use client";
+
+import { useContext, useEffect, useState } from "react";
+import Link from "next/link";
+import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { CourseCard } from "./components/CourseCard";
+import { Nav } from "./components/Nav";
+import type { API } from "@escolalms/sdk/lib";
 
 export default function Home() {
+  const { courses, fetchCourses, user, categoryTree, fetchCategories } = useContext(EscolaLMSContext);
+  const [mounted, setMounted] = useState(false);
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    fetchCourses({});
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const params: Record<string, unknown> = {};
+    if (debounced) params.title = debounced;
+    if (activeCategoryId) params.category_id = activeCategoryId;
+    fetchCourses(params);
+  }, [debounced, activeCategoryId, mounted]);
+
+  const loggedIn = mounted && !!user.value;
+
+  const categories: API.Category[] = (categoryTree as any)?.list ?? [];
+
+  function handleCategory(id: number | null) {
+    setActiveCategoryId(id);
+    setSearch("");
+  }
+
+  if (!mounted || courses.loading) {
+    return (
+      <>
+        <Nav />
+        <main className="max-w-5xl mx-auto px-4 py-12">
+          <h1 className="text-3xl font-bold text-[#04323e] mb-8">Courses</h1>
+          <p className="text-gray-500">Loading...</p>
+        </main>
+      </>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <>
+      <Nav />
+      <main className="max-w-5xl mx-auto px-4 py-12">
+        {loggedIn && (
+          <div className="mb-6 flex items-center justify-between bg-[#04323e]/5 rounded-xl px-5 py-4">
+            <p className="text-sm text-[#04323e] font-medium">Continue learning where you left off</p>
+            <Link href="/dashboard" className="text-sm font-semibold text-[#1abc9c] hover:underline">
+              My courses →
+            </Link>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mb-4 gap-4">
+          <h1 className="text-3xl font-bold text-[#04323e]">Courses</h1>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setActiveCategoryId(null); }}
+            placeholder="Search courses…"
+            className="border border-gray-200 rounded-full px-4 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+            <button
+              onClick={() => handleCategory(null)}
+              className={`shrink-0 text-sm font-medium px-4 py-1.5 rounded-full border transition-colors ${
+                activeCategoryId === null
+                  ? "bg-[#1abc9c] border-[#1abc9c] text-white"
+                  : "border-gray-200 text-[#555555] hover:border-[#1abc9c] hover:text-[#1abc9c]"
+              }`}
+            >
+              All
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategory(cat.id)}
+                className={`shrink-0 text-sm font-medium px-4 py-1.5 rounded-full border transition-colors ${
+                  activeCategoryId === cat.id
+                    ? "bg-[#1abc9c] border-[#1abc9c] text-white"
+                    : "border-gray-200 text-[#555555] hover:border-[#1abc9c] hover:text-[#1abc9c]"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {courses.list?.data.length === 0 && (
+          <p className="text-gray-500">No courses found.</p>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courses.list?.data.map((course) => (
+            <CourseCard key={course.id} course={course} />
+          ))}
         </div>
       </main>
-    </div>
+    </>
   );
 }
