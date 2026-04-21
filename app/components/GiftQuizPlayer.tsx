@@ -243,6 +243,8 @@ export function GiftQuizPlayer({ topic, onComplete }: Props) {
   const [score, setScore] = useState<{ result: number; max: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [gapAnalysis, setGapAnalysis] = useState<string | null>(null);
+  const [gapLoading, setGapLoading] = useState(false);
 
   const quizId = topic.topicable?.id;
 
@@ -311,12 +313,46 @@ export function GiftQuizPlayer({ topic, onComplete }: Props) {
       });
       const json = await res.json();
       const finished = json?.data ?? null;
-      setScore({
-        result: finished?.result_score ?? 0,
-        max: finished?.max_score ?? attempt.max_score ?? 0,
-      });
+      const resultScore = finished?.result_score ?? 0;
+      const maxScore = finished?.max_score ?? attempt.max_score ?? 0;
+      setScore({ result: resultScore, max: maxScore });
       setFinished(true);
       if (onComplete) onComplete();
+
+      // Fetch AI gap analysis for incomplete scores
+      const pct = maxScore > 0 ? Math.round((resultScore / maxScore) * 100) : 0;
+      if (pct < 100 && questions.length > 0) {
+        setGapLoading(true);
+        const questionSummary = questions
+          .map((q, i) => {
+            const ans = answers[q.id];
+            const ansStr = Array.isArray(ans) ? ans.join(", ") : ans ?? "(keine Antwort)";
+            return `${i + 1}. ${q.title}: "${ansStr}"`;
+          })
+          .join("\n");
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemPrompt:
+                "Du bist ein hilfreicher Lerncoach. Analysiere die Quiz-Ergebnisse und identifiziere Lernlücken. Gib 2-3 konkrete, motivierende Empfehlungen was der Student wiederholen sollte. Antworte kurz auf Deutsch. Keine Einleitung.",
+              messages: [
+                {
+                  role: "user",
+                  content: `Quiz: "${topic.title}"\nErgebnis: ${pct}%\n\nFragen und Antworten:\n${questionSummary}`,
+                },
+              ],
+            }),
+          });
+          const data = await res.json();
+          if (data.content) setGapAnalysis(data.content);
+        } catch {
+          // Fail silently
+        } finally {
+          setGapLoading(false);
+        }
+      }
     } catch {
       setError("Could not submit quiz. Please try again.");
     } finally {
@@ -345,6 +381,17 @@ export function GiftQuizPlayer({ topic, onComplete }: Props) {
             Score: {score.result} / {score.max} ({pct}%)
           </p>
         </div>
+        {!passed && (gapLoading || gapAnalysis) && (
+          <div className="text-left bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1 max-w-sm mx-auto">
+            <p className="text-xs font-semibold text-amber-800">Was sollte ich wiederholen?</p>
+            {gapLoading ? (
+              <p className="text-xs text-amber-600 animate-pulse">Analysiere deine Ergebnisse…</p>
+            ) : (
+              <p className="text-sm text-[#555555] whitespace-pre-line">{gapAnalysis}</p>
+            )}
+            <p className="text-xs text-gray-400">KI-Analyse</p>
+          </div>
+        )}
         <button
           onClick={startAttempt}
           disabled={loading}
