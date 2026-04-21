@@ -11,6 +11,7 @@ import { BookmarkButton } from "../../../../components/BookmarkButton";
 import { ExplainDifferentlyButton } from "../../../../components/ExplainDifferentlyButton";
 import { AiChatWidget } from "../../../../components/AiChatWidget";
 import { useToast } from "../../../../components/Toast";
+import { recordLessonCompletion } from "../../../../components/LearningGoalWidget";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -125,6 +126,7 @@ export default function TopicPage() {
   const handleMarkComplete = useCallback(async () => {
     await sendProgress(courseId, [{ topic_id: currentTopicId, status: 1 }]);
     await fetchCourseProgress(courseId);
+    recordLessonCompletion();
 
     const nextPath = nextTopic
       ? `/courses/${courseId}/topics/${nextTopic.id}`

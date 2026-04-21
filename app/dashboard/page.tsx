@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
 import { ProgressBar } from "../components/ProgressBar";
+import { LearningGoalWidget } from "../components/LearningGoalWidget";
 import type { API } from "@escolalms/sdk/lib";
 
 function getProgress(item: API.CourseProgressItem): number {
@@ -52,9 +53,14 @@ export default function DashboardPage() {
     <>
       <Nav />
       <main className="max-w-5xl mx-auto px-4 py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#04323e]">My courses</h1>
-          <p className="text-[#555555] mt-1">Welcome back, {user.value.first_name || user.value.email}</p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-[#04323e]">My courses</h1>
+            <p className="text-[#555555] mt-1">Welcome back, {user.value.first_name || user.value.email}</p>
+          </div>
+          <div className="w-full sm:w-64 shrink-0">
+            <LearningGoalWidget />
+          </div>
         </div>
 
         {progress.loading && <p className="text-gray-500">Loading…</p>}
