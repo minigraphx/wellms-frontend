@@ -12,6 +12,7 @@ import { ExplainDifferentlyButton } from "../../../../components/ExplainDifferen
 import { AiChatWidget } from "../../../../components/AiChatWidget";
 import { useToast } from "../../../../components/Toast";
 import { recordLessonCompletion } from "../../../../components/LearningGoalWidget";
+import { recordLearningActivity } from "../../../../components/LearningNudge";
 import { TopicQA } from "../../../../components/TopicQA";
 import { GenerateFlashcardsButton } from "../../../../components/GenerateFlashcardsButton";
 import type { API } from "@escolalms/sdk/lib";
@@ -129,6 +130,7 @@ export default function TopicPage() {
     await sendProgress(courseId, [{ topic_id: currentTopicId, status: 1 }]);
     await fetchCourseProgress(courseId);
     recordLessonCompletion();
+    recordLearningActivity();
 
     const nextPath = nextTopic
       ? `/courses/${courseId}/topics/${nextTopic.id}`

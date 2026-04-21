@@ -7,6 +7,7 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
 import { ProgressBar } from "../components/ProgressBar";
 import { LearningGoalWidget } from "../components/LearningGoalWidget";
+import { LearningNudge } from "../components/LearningNudge";
 import type { API } from "@escolalms/sdk/lib";
 
 function getProgress(item: API.CourseProgressItem): number {
@@ -52,6 +53,7 @@ export default function DashboardPage() {
   return (
     <>
       <Nav />
+      <LearningNudge />
       <main className="max-w-5xl mx-auto px-4 py-12">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
