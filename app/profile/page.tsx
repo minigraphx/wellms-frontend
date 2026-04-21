@@ -1,9 +1,11 @@
 "use client";
 
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
+import { useToast } from "../components/Toast";
+import type { API } from "@escolalms/sdk/lib";
 
 function SectionFeedback({ success, error }: { success: string; error: string }) {
   if (success) return <p className="text-sm text-[#1abc9c]">{success}</p>;
@@ -12,9 +14,10 @@ function SectionFeedback({ success, error }: { success: string; error: string })
 }
 
 export default function ProfilePage() {
-  const { user, fetchProfile, updateProfile, changePassword, updateAvatar } =
+  const { user, fetchProfile, updateProfile, changePassword, updateAvatar, fetchMyProducts, cancelSubscription } =
     useContext(EscolaLMSContext);
   const router = useRouter();
+  const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
 
   // Personal details
@@ -28,6 +31,10 @@ export default function ProfilePage() {
   const [pwdLoading, setPwdLoading] = useState(false);
   const [pwdSuccess, setPwdSuccess] = useState("");
   const [pwdError, setPwdError] = useState("");
+
+  // Subscriptions
+  const [myProducts, setMyProducts] = useState<API.Product[]>([]);
+  const [subCancelling, setSubCancelling] = useState<number | null>(null);
 
   // Avatar
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -47,6 +54,9 @@ export default function ProfilePage() {
       return;
     }
     fetchProfile();
+    fetchMyProducts({}).then((res: any) => {
+      setMyProducts(res?.data ?? []);
+    });
   }, [mounted, user.value]);
 
   // Populate form once user data loads
@@ -139,6 +149,21 @@ export default function ProfilePage() {
       setAvatarLoading(false);
     }
   }
+
+  const handleCancelSubscription = useCallback(async (productId: number) => {
+    setSubCancelling(productId);
+    try {
+      await cancelSubscription(productId);
+      setMyProducts((prev) => prev.filter((p) => Number(p.id) !== productId));
+      toast("Subscription cancelled.");
+    } catch {
+      toast("Failed to cancel subscription.", "error");
+    } finally {
+      setSubCancelling(null);
+    }
+  }, [cancelSubscription, toast]);
+
+  const activeSubscriptions = myProducts.filter((p) => p.subscription_period);
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c]";
   const labelClass = "block text-sm font-medium text-[#04323e] mb-1";
@@ -258,6 +283,33 @@ export default function ProfilePage() {
             </button>
           </form>
         </section>
+
+        {/* Subscriptions */}
+        {activeSubscriptions.length > 0 && (
+          <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-[#04323e] mb-5">Subscriptions</h2>
+            <ul className="space-y-4">
+              {activeSubscriptions.map((p) => (
+                <li key={p.id} className="flex items-center justify-between gap-4 border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                  <div>
+                    <p className="font-medium text-[#04323e]">{p.name}</p>
+                    <p className="text-sm text-gray-400">
+                      Renews {p.subscription_period}
+                      {p.end_date && ` · Expires ${new Date(p.end_date).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleCancelSubscription(Number(p.id))}
+                    disabled={subCancelling === Number(p.id)}
+                    className="text-sm font-medium text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors shrink-0"
+                  >
+                    {subCancelling === Number(p.id) ? "Cancelling…" : "Cancel"}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Change password */}
         <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">

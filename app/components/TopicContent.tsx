@@ -5,10 +5,13 @@ import type { API } from "@escolalms/sdk/lib";
 import { TopicType } from "@escolalms/sdk/lib/types/enums";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { SCORMPlayer } from "@escolalms/sdk/lib/react";
+import { ProjectUpload } from "./ProjectUpload";
+import { GiftQuizPlayer } from "./GiftQuizPlayer";
 
 interface TopicContentProps {
   topic: API.Topic;
   onVideoEnded?: () => void;
+  onComplete?: () => void;
 }
 
 function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
@@ -45,7 +48,7 @@ function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
   );
 }
 
-export function TopicContent({ topic, onVideoEnded }: TopicContentProps) {
+export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentProps) {
   if (!topic.topicable_type) {
     return <p className="text-gray-500">No content available.</p>;
   }
@@ -117,11 +120,19 @@ export function TopicContent({ topic, onVideoEnded }: TopicContentProps) {
       );
     }
 
-    default:
+    case TopicType.Project:
+      return <ProjectUpload topicId={topic.id} />;
+
+    case TopicType.GiftQuiz:
+      return <GiftQuizPlayer topic={topic as API.TopicQuiz} onComplete={onVideoEnded} />;
+
+    default: {
+      const unknown = topic as API.Topic;
       return (
         <p className="text-gray-500 italic">
-          Content type <code>{topic.topicable_type}</code> is not yet supported in this viewer.
+          Content type <code>{(unknown as any).topicable_type}</code> is not yet supported in this viewer.
         </p>
       );
+    }
   }
 }

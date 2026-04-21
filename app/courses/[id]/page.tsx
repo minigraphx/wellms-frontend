@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCurriculum } from "../../components/CourseCurriculum";
+import { useToast } from "../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -28,11 +29,14 @@ export default function CoursePage() {
     addCourseAccess,
     fetchMyCourses,
     myCourses,
+    fetchMyProducts,
   } = useContext(EscolaLMSContext);
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [accessExpiry, setAccessExpiry] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -53,6 +57,13 @@ export default function CoursePage() {
     if (!mounted || !user.value) return;
     fetchCourseProgress(courseId);
     fetchMyCourses();
+    fetchMyProducts({}).then((res: any) => {
+      const products: API.Product[] = res?.data ?? [];
+      const match = products.find((p) =>
+        p.productables?.some((item) => item.productable_id === courseId)
+      );
+      setAccessExpiry(match?.end_date ?? null);
+    });
   }, [mounted, courseId, user.value]);
 
   const course = program.value;
@@ -107,11 +118,14 @@ export default function CoursePage() {
       if (res.success || msg.toLowerCase().includes("already")) {
         await fetchMyCourses();
         await fetchCourseProgress(courseId);
+        toast("You're enrolled! Start learning below.");
       } else {
         setEnrollError("Enrollment failed. Please try again.");
+        toast("Enrollment failed. Please try again.", "error");
       }
     } catch {
       setEnrollError("Enrollment failed. Please try again.");
+      toast("Enrollment failed. Please try again.", "error");
     } finally {
       setEnrolling(false);
     }
@@ -211,7 +225,10 @@ export default function CoursePage() {
 
           {course.author && (
             <p className="text-sm text-gray-400">
-              By <span className="font-medium text-[#555555]">{course.author.first_name} {course.author.last_name}</span>
+              By{" "}
+              <Link href={`/instructors/${course.author.id}`} className="font-medium text-[#555555] hover:text-[#1abc9c] transition-colors">
+                {course.author.first_name} {course.author.last_name}
+              </Link>
             </p>
           )}
         </div>
@@ -233,7 +250,27 @@ export default function CoursePage() {
             </div>
           )}
 
+          {accessExpiry && isEnrolled && (
+            <p className="text-xs text-gray-400 text-center">
+              Access expires {new Date(accessExpiry).toLocaleDateString()}
+            </p>
+          )}
+
           {renderCTA()}
+
+          {isEnrolled && (course as any).video_url && (
+            <a
+              href={(course as any).video_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full border border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 font-semibold py-2.5 rounded-full text-sm transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+              </svg>
+              Join live session
+            </a>
+          )}
         </div>
       </div>
 

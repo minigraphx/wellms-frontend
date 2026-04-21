@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { API } from "@escolalms/sdk/lib";
+import type { MouseEvent } from "react";
 import { ProgressBar } from "./ProgressBar";
 
 interface CourseCardProps {
@@ -59,7 +60,13 @@ export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps)
 
         {course.author && (
           <p className="text-xs text-gray-400 mt-3">
-            {course.author.first_name} {course.author.last_name}
+            <Link
+              href={`/instructors/${course.author.id}`}
+              onClick={(e: MouseEvent) => e.stopPropagation()}
+              className="hover:text-[#1abc9c] transition-colors"
+            >
+              {course.author.first_name} {course.author.last_name}
+            </Link>
           </p>
         )}
 

@@ -1,11 +1,15 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { LessonNav } from "../../../../components/LessonNav";
 import { TopicContent } from "../../../../components/TopicContent";
+import { BookmarkButton } from "../../../../components/BookmarkButton";
+import { ExplainDifferentlyButton } from "../../../../components/ExplainDifferentlyButton";
+import { AiChatWidget } from "../../../../components/AiChatWidget";
+import { useToast } from "../../../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -22,7 +26,10 @@ export default function TopicPage() {
   const courseId = Number(id);
   const currentTopicId = Number(topicId);
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const ctx = useContext(EscolaLMSContext);
   const {
@@ -33,6 +40,7 @@ export default function TopicPage() {
     sendProgress,
     getNextPrevTopic,
     user,
+    logout,
     fetchMyCourses,
     myCourses,
   } = ctx;
@@ -87,6 +95,22 @@ export default function TopicPage() {
   const isFinished = isTopicFinished(currentTopicId);
   const isLocked = !isEnrolled && !topic?.preview;
 
+  // Close user menu on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const u = user.value;
+  const initials = u
+    ? `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() || u.email[0].toUpperCase()
+    : "";
+
   // topicPing every 30s for time-on-topic analytics
   useEffect(() => {
     if (!topic || isLocked || !topicPing) return;
@@ -99,9 +123,13 @@ export default function TopicPage() {
     await sendProgress(courseId, [{ topic_id: currentTopicId, status: 1 }]);
     await fetchCourseProgress(courseId);
     if (nextTopic) {
+      toast("Lesson complete! Moving to next topic.");
       router.push(`/courses/${courseId}/topics/${nextTopic.id}`);
+    } else {
+      toast("Course complete! 🎉", "success");
+      router.push(`/courses/${courseId}/complete`);
     }
-  }, [courseId, currentTopicId, nextTopic, sendProgress, fetchCourseProgress, router]);
+  }, [courseId, currentTopicId, nextTopic, sendProgress, fetchCourseProgress, router, toast]);
 
   const handleVideoEnded = useCallback(() => {
     if (!isFinished) handleMarkComplete();
@@ -145,18 +173,63 @@ export default function TopicPage() {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex items-center px-6 py-3 bg-white border-b border-gray-100 shrink-0">
-          <nav className="text-sm text-gray-400">
-            <Link href="/" className="hover:text-[#1abc9c] transition-colors">
-              Courses
+        {/* Focus-mode header — minimal, no full site nav */}
+        <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-100 shrink-0">
+          <nav className="text-sm text-gray-400 flex items-center min-w-0">
+            <Link href={`/courses/${courseId}`} className="hover:text-[#1abc9c] transition-colors truncate max-w-[200px] sm:max-w-xs">
+              ← {course.title}
             </Link>
-            <span className="mx-2">›</span>
-            <Link href={`/courses/${courseId}`} className="hover:text-[#1abc9c] transition-colors">
-              {course.title}
-            </Link>
-            <span className="mx-2">›</span>
-            <span className="text-[#04323e]">{topic.title}</span>
+            <span className="mx-2 shrink-0">›</span>
+            <span className="text-[#04323e] truncate">{topic.title}</span>
           </nav>
+
+          <div className="flex items-center gap-3 ml-4 shrink-0">
+            {!isLocked && <BookmarkButton topicId={currentTopicId} />}
+
+          {/* User menu in player header */}
+          {u && (
+            <div className="relative shrink-0 ml-4" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu((v) => !v)}
+                aria-label="Open user menu"
+                className="w-8 h-8 rounded-full bg-[#1abc9c]/10 text-[#1abc9c] text-sm font-bold flex items-center justify-center hover:bg-[#1abc9c]/20 transition-colors"
+              >
+                {(u as any)?.avatar ? (
+                  <img src={(u as any).avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </button>
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-40">
+                  <div className="px-4 py-2 border-b border-gray-50">
+                    <p className="text-xs font-semibold text-[#04323e] truncate">{u.first_name || u.email}</p>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setShowUserMenu(false)}
+                    className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                  >
+                    My courses
+                  </Link>
+                  <Link
+                    href="/profile"
+                    onClick={() => setShowUserMenu(false)}
+                    className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => { logout(); setShowUserMenu(false); }}
+                    className="w-full text-left px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#04323e] transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">
@@ -176,7 +249,10 @@ export default function TopicPage() {
                 </Link>
               </div>
             ) : (
-              <TopicContent topic={topic} onVideoEnded={handleVideoEnded} />
+              <>
+                <TopicContent topic={topic} onVideoEnded={handleVideoEnded} />
+                <ExplainDifferentlyButton topicTitle={topic.title} />
+              </>
             )}
 
             {topic.resources && topic.resources.length > 0 && (
@@ -253,6 +329,13 @@ export default function TopicPage() {
           </div>
         </footer>
       </div>
+
+      {!isLocked && (
+        <AiChatWidget
+          courseTitle={course.title}
+          topicTitle={topic.title}
+        />
+      )}
     </div>
   );
 }

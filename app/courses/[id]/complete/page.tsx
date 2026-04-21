@@ -4,6 +4,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { QuestionnaireWidget } from "../../../components/QuestionnaireWidget";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -35,6 +36,7 @@ export default function CourseCompletePage() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -93,6 +95,13 @@ export default function CourseCompletePage() {
     const list = (certificates as any)?.list?.data ?? [];
     return list.find((c: API.Certificate) => c.assignable_id === courseId) ?? null;
   }, [certificates, courseId]);
+
+  async function handleCopyLink() {
+    const url = `${window.location.origin}/courses/${courseId}/complete`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function handleDownload() {
     if (!cert) return;
@@ -164,10 +173,28 @@ export default function CourseCompletePage() {
               {downloading ? "Generating…" : "Download certificate (PDF)"}
             </button>
             {downloadError && <p className="text-sm text-red-600">{downloadError}</p>}
+
+            <button
+              onClick={handleCopyLink}
+              className="w-full border border-gray-200 hover:border-[#1abc9c] text-[#555555] hover:text-[#1abc9c] font-semibold py-2.5 rounded-full text-sm transition-colors"
+            >
+              {copied ? "✓ Link copied!" : "Copy shareable link"}
+            </button>
           </div>
         ) : (
-          <p className="text-sm text-gray-400">No certificate is configured for this course.</p>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-400">No certificate is configured for this course.</p>
+            <button
+              onClick={handleCopyLink}
+              className="w-full border border-gray-200 hover:border-[#1abc9c] text-[#555555] hover:text-[#1abc9c] font-semibold py-2.5 rounded-full text-sm transition-colors"
+            >
+              {copied ? "✓ Link copied!" : "Copy shareable link"}
+            </button>
+          </div>
         )}
+
+        {/* Course rating */}
+        <QuestionnaireWidget modelTypeTitle="Course" modelId={courseId} />
 
         {/* Nav links */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
