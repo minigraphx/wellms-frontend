@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "r
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { TopicType } from "@escolalms/sdk/lib/types/enums";
 import { LessonNav } from "../../../../components/LessonNav";
 import { TopicContent } from "../../../../components/TopicContent";
 import { BookmarkButton } from "../../../../components/BookmarkButton";
@@ -30,6 +31,8 @@ export default function TopicPage() {
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const [summaryModal, setSummaryModal] = useState<{ text: string; nextPath: string } | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   const ctx = useContext(EscolaLMSContext);
   const {
@@ -122,14 +125,48 @@ export default function TopicPage() {
   const handleMarkComplete = useCallback(async () => {
     await sendProgress(courseId, [{ topic_id: currentTopicId, status: 1 }]);
     await fetchCourseProgress(courseId);
+
+    const nextPath = nextTopic
+      ? `/courses/${courseId}/topics/${nextTopic.id}`
+      : `/courses/${courseId}/complete`;
+
+    // For RichText topics: show AI key-takeaways summary before navigating
+    if (topic?.topicable_type === TopicType.RichText) {
+      const html = (topic as API.TopicRichText).topicable?.value ?? "";
+      const plainText = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 2000);
+      if (plainText.length > 50) {
+        setSummaryLoading(true);
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemPrompt:
+                "Du bist ein hilfreicher Lernassistent. Fasse die wichtigsten 3-5 Punkte dieser Lektion als kurze Bullet-Points zusammen. Antworte auf Deutsch. Keine Einleitung, nur die Bullet-Points mit •.",
+              messages: [{ role: "user", content: `Lektion: "${topic.title}"\n\n${plainText}` }],
+            }),
+          });
+          const data = await res.json();
+          if (data.content) {
+            setSummaryLoading(false);
+            setSummaryModal({ text: data.content, nextPath });
+            return;
+          }
+        } catch {
+          // Fall through to normal navigation on error
+        }
+        setSummaryLoading(false);
+      }
+    }
+
     if (nextTopic) {
       toast("Lesson complete! Moving to next topic.");
-      router.push(`/courses/${courseId}/topics/${nextTopic.id}`);
+      router.push(nextPath);
     } else {
       toast("Course complete! 🎉", "success");
-      router.push(`/courses/${courseId}/complete`);
+      router.push(nextPath);
     }
-  }, [courseId, currentTopicId, nextTopic, sendProgress, fetchCourseProgress, router, toast]);
+  }, [courseId, currentTopicId, nextTopic, topic, sendProgress, fetchCourseProgress, router, toast]);
 
   const handleVideoEnded = useCallback(() => {
     if (!isFinished) handleMarkComplete();
@@ -299,14 +336,20 @@ export default function TopicPage() {
           {!isLocked && (
             <button
               onClick={handleMarkComplete}
-              disabled={isFinished}
+              disabled={isFinished || summaryLoading}
               className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors ${
                 isFinished
                   ? "bg-[#1abc9c]/10 text-[#1abc9c] cursor-default"
-                  : "bg-[#1abc9c] hover:bg-[#15a288] text-white"
+                  : "bg-[#1abc9c] hover:bg-[#15a288] text-white disabled:opacity-60"
               }`}
             >
-              {isFinished ? "✓ Completed" : nextTopic ? "Mark Complete & Continue →" : "Mark as Complete"}
+              {summaryLoading
+                ? "Zusammenfassung…"
+                : isFinished
+                ? "✓ Completed"
+                : nextTopic
+                ? "Mark Complete & Continue →"
+                : "Mark as Complete"}
             </button>
           )}
 
@@ -335,6 +378,36 @@ export default function TopicPage() {
           courseTitle={course.title}
           topicTitle={topic.title}
         />
+      )}
+
+      {summaryModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">✨</span>
+              <h2 className="text-lg font-bold text-[#04323e]">Key Takeaways</h2>
+            </div>
+            <div className="text-sm text-[#555555] whitespace-pre-line leading-relaxed">
+              {summaryModal.text}
+            </div>
+            <p className="text-xs text-gray-400">KI-generierte Zusammenfassung</p>
+            <button
+              onClick={() => {
+                const path = summaryModal.nextPath;
+                setSummaryModal(null);
+                if (nextTopic) {
+                  toast("Lesson complete! Moving to next topic.");
+                } else {
+                  toast("Course complete! 🎉", "success");
+                }
+                router.push(path);
+              }}
+              className="w-full bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold py-2.5 rounded-full transition-colors"
+            >
+              {nextTopic ? "Next lesson →" : "Finish course 🎉"}
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
