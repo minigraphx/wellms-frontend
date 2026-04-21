@@ -7,6 +7,8 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { LessonNav } from "../../../../components/LessonNav";
 import { TopicContent } from "../../../../components/TopicContent";
 import { BookmarkButton } from "../../../../components/BookmarkButton";
+import { ExplainDifferentlyButton } from "../../../../components/ExplainDifferentlyButton";
+import { AiChatWidget } from "../../../../components/AiChatWidget";
 import { useToast } from "../../../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
@@ -247,7 +249,10 @@ export default function TopicPage() {
                 </Link>
               </div>
             ) : (
-              <TopicContent topic={topic} onVideoEnded={handleVideoEnded} />
+              <>
+                <TopicContent topic={topic} onVideoEnded={handleVideoEnded} />
+                <ExplainDifferentlyButton topicTitle={topic.title} />
+              </>
             )}
 
             {topic.resources && topic.resources.length > 0 && (
@@ -324,6 +329,13 @@ export default function TopicPage() {
           </div>
         </footer>
       </div>
+
+      {!isLocked && (
+        <AiChatWidget
+          courseTitle={course.title}
+          topicTitle={topic.title}
+        />
+      )}
     </div>
   );
 }

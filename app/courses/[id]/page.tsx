@@ -257,6 +257,20 @@ export default function CoursePage() {
           )}
 
           {renderCTA()}
+
+          {isEnrolled && (course as any).video_url && (
+            <a
+              href={(course as any).video_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full border border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 font-semibold py-2.5 rounded-full text-sm transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+              </svg>
+              Join live session
+            </a>
+          )}
         </div>
       </div>
 
