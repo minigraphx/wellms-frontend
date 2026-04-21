@@ -121,7 +121,7 @@ export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentPr
     }
 
     case TopicType.Project:
-      return <ProjectUpload topicId={topic.id} />;
+      return <ProjectUpload topicId={topic.id} topicTitle={topic.title} />;
 
     case TopicType.GiftQuiz:
       return <GiftQuizPlayer topic={topic as API.TopicQuiz} onComplete={onVideoEnded} />;

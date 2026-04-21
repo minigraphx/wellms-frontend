@@ -6,9 +6,10 @@ import type { API } from "@escolalms/sdk/lib";
 
 interface Props {
   topicId: number;
+  topicTitle?: string;
 }
 
-export function ProjectUpload({ topicId }: Props) {
+export function ProjectUpload({ topicId, topicTitle }: Props) {
   const { user, apiUrl, token } = useContext(EscolaLMSContext) as any;
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -16,6 +17,8 @@ export function ProjectUpload({ topicId }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [aiFeedback, setAiFeedback] = useState<string | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const loadSubmissions = useCallback(async () => {
     if (!token) return;
@@ -54,6 +57,28 @@ export function ProjectUpload({ topicId }: Props) {
         setSuccess("Assignment submitted successfully!");
         if (fileRef.current) fileRef.current.value = "";
         await loadSubmissions();
+        if (topicTitle) {
+          setFeedbackLoading(true);
+          try {
+            const fbRes = await fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                systemPrompt:
+                  "Du bist ein hilfreicher Tutor. Gib konstruktives erstes Feedback zu einer Projektabgabe. Sei ermutigend und konkret. Antworte auf Deutsch in 3-4 Sätzen.",
+                messages: [
+                  {
+                    role: "user",
+                    content: `Der Student hat eine Projektabgabe eingereicht für: "${topicTitle}". Gib allgemeines konstruktives Feedback.`,
+                  },
+                ],
+              }),
+            });
+            const fbData = await fbRes.json();
+            if (fbData.content) setAiFeedback(fbData.content);
+          } catch {}
+          setFeedbackLoading(false);
+        }
       } else {
         const json = await res.json().catch(() => ({}));
         setError(json?.message ?? "Upload failed. Please try again.");
@@ -63,7 +88,7 @@ export function ProjectUpload({ topicId }: Props) {
     } finally {
       setUploading(false);
     }
-  }, [apiUrl, token, topicId, loadSubmissions]);
+  }, [apiUrl, token, topicId, topicTitle, loadSubmissions]);
 
   if (!user.value) {
     return <p className="text-gray-400 text-sm">Sign in to submit your assignment.</p>;
@@ -80,7 +105,7 @@ export function ProjectUpload({ topicId }: Props) {
           type="file"
           id="project-upload"
           className="hidden"
-          onChange={() => setSuccess("")}
+          onChange={() => { setSuccess(""); setAiFeedback(null); }}
         />
         <label
           htmlFor="project-upload"
@@ -100,6 +125,16 @@ export function ProjectUpload({ topicId }: Props) {
 
       {success && <p className="text-sm text-[#1abc9c] font-medium">{success}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
+
+      {feedbackLoading && (
+        <p className="text-sm text-amber-600 animate-pulse">KI analysiert deine Abgabe…</p>
+      )}
+      {aiFeedback && !feedbackLoading && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 leading-relaxed">
+          <p className="font-semibold mb-1">KI-Feedback</p>
+          <p className="whitespace-pre-line">{aiFeedback}</p>
+        </div>
+      )}
 
       {submissions.length > 0 && (
         <div className="mt-4">
