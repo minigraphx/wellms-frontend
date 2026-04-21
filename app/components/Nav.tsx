@@ -52,6 +52,16 @@ export function Nav() {
     ? `${u.first_name?.[0] ?? ""}${u.last_name?.[0] ?? ""}`.toUpperCase() || u.email[0].toUpperCase()
     : "";
 
+  const isTutor = useMemo(() => {
+    const roles: unknown = (u as any)?.roles;
+    if (!Array.isArray(roles)) return false;
+    return roles.some((r: any) =>
+      typeof r === "string"
+        ? r === "author" || r === "tutor"
+        : r?.name === "author" || r?.name === "tutor"
+    );
+  }, [u]);
+
   return (
     <>
       <nav className="border-b bg-white px-4 py-3 flex items-center justify-between relative z-30">
@@ -149,6 +159,15 @@ export function Nav() {
                     >
                       Profile
                     </Link>
+                    {isTutor && (
+                      <Link
+                        href="/tutor"
+                        onClick={() => setShowDropdown(false)}
+                        className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                      >
+                        Tutor area
+                      </Link>
+                    )}
                     <button
                       onClick={() => { logout(); setShowDropdown(false); }}
                       className="w-full text-left px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#04323e] transition-colors"
@@ -224,6 +243,11 @@ export function Nav() {
               <Link href="/profile" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 Profile
               </Link>
+              {isTutor && (
+                <Link href="/tutor" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                  Tutor area
+                </Link>
+              )}
               <button
                 onClick={() => { logout(); setShowMobileMenu(false); }}
                 className="text-left text-sm font-medium text-[#555555] hover:text-[#04323e] transition-colors py-1"
