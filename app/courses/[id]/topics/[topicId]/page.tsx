@@ -12,6 +12,7 @@ import { ExplainDifferentlyButton } from "../../../../components/ExplainDifferen
 import { AiChatWidget } from "../../../../components/AiChatWidget";
 import { useToast } from "../../../../components/Toast";
 import { recordLessonCompletion } from "../../../../components/LearningGoalWidget";
+import { TopicQA } from "../../../../components/TopicQA";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -312,6 +313,10 @@ export default function TopicPage() {
                   ))}
                 </ul>
               </div>
+            )}
+
+            {!isLocked && (
+              <TopicQA topicId={currentTopicId} topicTitle={topic.title} />
             )}
           </div>
         </div>
