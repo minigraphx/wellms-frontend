@@ -153,6 +153,13 @@ export function Nav() {
                       Bookmarks
                     </Link>
                     <Link
+                      href="/flashcards"
+                      onClick={() => setShowDropdown(false)}
+                      className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                    >
+                      Flashcards
+                    </Link>
+                    <Link
                       href="/profile"
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
@@ -242,6 +249,9 @@ export function Nav() {
               </Link>
               <Link href="/profile" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 Profile
+              </Link>
+              <Link href="/flashcards" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                Flashcards
               </Link>
               {isTutor && (
                 <Link href="/tutor" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">

@@ -13,6 +13,7 @@ import { AiChatWidget } from "../../../../components/AiChatWidget";
 import { useToast } from "../../../../components/Toast";
 import { recordLessonCompletion } from "../../../../components/LearningGoalWidget";
 import { TopicQA } from "../../../../components/TopicQA";
+import { GenerateFlashcardsButton } from "../../../../components/GenerateFlashcardsButton";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -312,6 +313,16 @@ export default function TopicPage() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {!isLocked && topic.topicable_type === TopicType.RichText && (
+              <div className="mt-6">
+                <GenerateFlashcardsButton
+                  topicId={currentTopicId}
+                  topicTitle={topic.title}
+                  htmlContent={(topic as API.TopicRichText).topicable?.value ?? ""}
+                />
               </div>
             )}
 
