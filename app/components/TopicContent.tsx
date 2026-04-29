@@ -12,6 +12,8 @@ interface TopicContentProps {
   topic: API.Topic;
   onVideoEnded?: () => void;
   onComplete?: () => void;
+  onWatchedEnough?: () => void;
+  onPass?: () => void;
 }
 
 function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
@@ -48,7 +50,7 @@ function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
   );
 }
 
-export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentProps) {
+export function TopicContent({ topic, onVideoEnded, onComplete, onWatchedEnough, onPass }: TopicContentProps) {
   if (!topic.topicable_type) {
     return <p className="text-gray-500">No content available.</p>;
   }
@@ -65,12 +67,21 @@ export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentPr
 
     case TopicType.Video: {
       const t = topic as API.TopicVideo;
+      let watchedFired = false;
       return (
         <video
           src={t.topicable.url}
           poster={t.topicable.poster_url}
           controls
           onEnded={onVideoEnded}
+          onTimeUpdate={(e) => {
+            if (watchedFired || !onWatchedEnough) return;
+            const v = e.currentTarget;
+            if (v.duration > 0 && v.currentTime / v.duration >= 0.9) {
+              watchedFired = true;
+              onWatchedEnough();
+            }
+          }}
           className="w-full rounded-lg aspect-video bg-black"
         />
       );
@@ -124,7 +135,7 @@ export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentPr
       return <ProjectUpload topicId={topic.id} topicTitle={topic.title} />;
 
     case TopicType.GiftQuiz:
-      return <GiftQuizPlayer topic={topic as API.TopicQuiz} onComplete={onVideoEnded} />;
+      return <GiftQuizPlayer topic={topic as API.TopicQuiz} onComplete={onVideoEnded} onPass={onPass} />;
 
     default: {
       const unknown = topic as API.Topic;

@@ -102,6 +102,28 @@ export default function TopicPage() {
   const isFinished = isTopicFinished(currentTopicId);
   const isLocked = !isEnrolled && !topic?.preview;
 
+  // Drip lock: topic has a future active_from date
+  const isDripLocked = isEnrolled && !!(topic as any)?.active_from && new Date((topic as any).active_from) > new Date();
+
+  // Prerequisite lock: previous topic in curriculum must be completed first
+  const currentTopicIndex = allTopics.findIndex((t) => t.id === currentTopicId);
+  const prerequisiteTopic = currentTopicIndex > 0 ? allTopics[currentTopicIndex - 1] : null;
+  const isPrerequisiteLocked = isEnrolled && !!prerequisiteTopic && !isTopicFinished(prerequisiteTopic.id);
+
+  // Compliance: video must be 90% watched / quiz must be passed before mark-complete
+  const [videoWatched, setVideoWatched] = useState(false);
+  const [quizPassed, setQuizPassed] = useState(false);
+
+  // Reset compliance flags when topic changes
+  useEffect(() => { setVideoWatched(false); setQuizPassed(false); }, [currentTopicId]);
+  // Already-finished topics don't need compliance re-check
+  const complianceMet = useMemo(() => {
+    if (isFinished) return true;
+    if (topic?.topicable_type === TopicType.Video) return videoWatched;
+    if (topic?.topicable_type === TopicType.GiftQuiz) return quizPassed;
+    return true;
+  }, [isFinished, topic?.topicable_type, videoWatched, quizPassed]);
+
   // Close user menu on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -291,9 +313,42 @@ export default function TopicPage() {
                   Go to course page
                 </Link>
               </div>
+            ) : isDripLocked ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="text-4xl mb-4">🕐</div>
+                <h2 className="text-xl font-bold text-[#04323e] mb-2">Content not yet available</h2>
+                <p className="text-[#555555]">
+                  This lesson unlocks on{" "}
+                  <span className="font-semibold">
+                    {new Date((topic as any).active_from).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+                  </span>.
+                </p>
+              </div>
+            ) : isPrerequisiteLocked ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="text-4xl mb-4">🔗</div>
+                <h2 className="text-xl font-bold text-[#04323e] mb-2">Complete the previous lesson first</h2>
+                <p className="text-[#555555] mb-6">
+                  You need to finish <span className="font-semibold">"{prerequisiteTopic!.title}"</span> before accessing this lesson.
+                </p>
+                <Link
+                  href={`/courses/${courseId}/topics/${prerequisiteTopic!.id}`}
+                  className="inline-block bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-8 py-3 rounded-full transition-colors"
+                >
+                  Go to previous lesson →
+                </Link>
+              </div>
             ) : (
               <>
-                <TopicContent topic={topic} onVideoEnded={handleVideoEnded} />
+                <TopicContent
+                  topic={topic}
+                  onVideoEnded={handleVideoEnded}
+                  onWatchedEnough={() => setVideoWatched(true)}
+                  onPass={() => setQuizPassed(true)}
+                />
+                {topic.topicable_type === TopicType.Video && !isFinished && !videoWatched && (
+                  <p className="mt-3 text-xs text-gray-400 text-center">Watch 90% of the video to mark this lesson complete.</p>
+                )}
                 <ExplainDifferentlyButton topicTitle={topic.title} />
               </>
             )}
@@ -353,10 +408,10 @@ export default function TopicPage() {
             )}
           </div>
 
-          {!isLocked && (
+          {!isLocked && !isDripLocked && !isPrerequisiteLocked && (
             <button
               onClick={handleMarkComplete}
-              disabled={isFinished || summaryLoading}
+              disabled={isFinished || summaryLoading || !complianceMet}
               className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors ${
                 isFinished
                   ? "bg-[#1abc9c]/10 text-[#1abc9c] cursor-default"
@@ -367,6 +422,10 @@ export default function TopicPage() {
                 ? "Zusammenfassung…"
                 : isFinished
                 ? "✓ Completed"
+                : !complianceMet && topic.topicable_type === TopicType.Video
+                ? "Watch 90% to complete"
+                : !complianceMet && topic.topicable_type === TopicType.GiftQuiz
+                ? "Pass the quiz to continue"
                 : nextTopic
                 ? "Mark Complete & Continue →"
                 : "Mark as Complete"}
