@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { LoginForm } from "./LoginForm";
 import { CartDrawer } from "./CartDrawer";
+import { NotificationBell } from "./NotificationBell";
 import type { API } from "@escolalms/sdk/lib";
 
 export function Nav() {
@@ -102,6 +103,7 @@ export function Nav() {
 
           {loggedIn ? (
             <>
+              <NotificationBell />
               <Link
                 href="/dashboard"
                 className={`text-sm font-medium transition-colors ${

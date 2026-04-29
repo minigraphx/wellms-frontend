@@ -13,6 +13,7 @@ import { AiChatWidget } from "../../../../components/AiChatWidget";
 import { useToast } from "../../../../components/Toast";
 import { recordLessonCompletion } from "../../../../components/LearningGoalWidget";
 import { recordLearningActivity } from "../../../../components/LearningNudge";
+import { awardPoints } from "../../../../components/GamificationWidget";
 import { TopicQA } from "../../../../components/TopicQA";
 import { GenerateFlashcardsButton } from "../../../../components/GenerateFlashcardsButton";
 import type { API } from "@escolalms/sdk/lib";
@@ -153,6 +154,7 @@ export default function TopicPage() {
     await fetchCourseProgress(courseId);
     recordLessonCompletion();
     recordLearningActivity();
+    awardPoints();
 
     const nextPath = nextTopic
       ? `/courses/${courseId}/topics/${nextTopic.id}`

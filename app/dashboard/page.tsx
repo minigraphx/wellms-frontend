@@ -8,6 +8,7 @@ import { Nav } from "../components/Nav";
 import { ProgressBar } from "../components/ProgressBar";
 import { LearningGoalWidget } from "../components/LearningGoalWidget";
 import { LearningNudge } from "../components/LearningNudge";
+import { GamificationWidget } from "../components/GamificationWidget";
 import type { API } from "@escolalms/sdk/lib";
 
 function getProgress(item: API.CourseProgressItem): number {
@@ -60,8 +61,9 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-[#04323e]">My courses</h1>
             <p className="text-[#555555] mt-1">Welcome back, {user.value.first_name || user.value.email}</p>
           </div>
-          <div className="w-full sm:w-64 shrink-0">
+          <div className="w-full sm:w-64 shrink-0 space-y-3">
             <LearningGoalWidget />
+            <GamificationWidget />
           </div>
         </div>
 
