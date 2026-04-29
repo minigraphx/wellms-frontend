@@ -49,11 +49,11 @@ export default function TutorPage() {
 
     if (fetchMyAuthoredCourses) {
       tasks.push(
-        (fetchMyAuthoredCourses() as Promise<any>).then((res: any) => {
-          const data = res?.data ?? (ctx as any).authoredCourses?.value ?? [];
+        (fetchMyAuthoredCourses() as Promise<any>).then(() => {
+          const data: API.Course[] = (ctx as any).myAuthoredCourses?.list?.data ?? [];
           if (Array.isArray(data)) setCourses(data);
         }).catch(() => {
-          const fallback = (ctx as any).authoredCourses?.value;
+          const fallback: API.Course[] = (ctx as any).myAuthoredCourses?.list?.data ?? [];
           if (Array.isArray(fallback)) setCourses(fallback);
         })
       );

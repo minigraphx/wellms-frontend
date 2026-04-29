@@ -21,6 +21,7 @@ export function TopicQA({ topicId, topicTitle }: Props) {
   const [entries, setEntries] = useState<QAEntry[]>([]);
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -35,6 +36,7 @@ export function TopicQA({ topicId, topicTitle }: Props) {
     const q = question.trim();
     if (!q || loading) return;
     setLoading(true);
+    setError(false);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -52,7 +54,9 @@ export function TopicQA({ topicId, topicTitle }: Props) {
         localStorage.setItem(storageKey(topicId), JSON.stringify(next));
         setQuestion("");
       }
-    } catch {}
+    } catch {
+      setError(true);
+    }
     setLoading(false);
   }
 
@@ -87,6 +91,9 @@ export function TopicQA({ topicId, topicTitle }: Props) {
             >
               {loading ? "KI antwortet…" : "Fragen"}
             </button>
+            {error && (
+              <p className="text-xs text-red-500">Antwort konnte nicht geladen werden. Bitte erneut versuchen.</p>
+            )}
           </div>
 
           {entries.length > 0 && (

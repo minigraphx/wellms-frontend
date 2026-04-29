@@ -27,6 +27,17 @@ function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
   return result;
 }
 
+function findParentLesson(lessons: API.Lesson[], topicId: number): API.Lesson | null {
+  for (const lesson of lessons) {
+    if (lesson.topics?.some((t) => t.id === topicId)) return lesson;
+    if (lesson.lessons) {
+      const found = findParentLesson(lesson.lessons, topicId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 export default function TopicPage() {
   const { id, topicId } = useParams<{ id: string; topicId: string }>();
   const courseId = Number(id);
@@ -106,9 +117,11 @@ export default function TopicPage() {
   // Drip lock: topic has a future active_from date
   const isDripLocked = isEnrolled && !!(topic as any)?.active_from && new Date((topic as any).active_from) > new Date();
 
-  // Prerequisite lock: previous topic in curriculum must be completed first
-  const currentTopicIndex = allTopics.findIndex((t) => t.id === currentTopicId);
-  const prerequisiteTopic = currentTopicIndex > 0 ? allTopics[currentTopicIndex - 1] : null;
+  // Prerequisite lock: previous topic within the same lesson must be completed first
+  const parentLesson = useMemo(() => course?.lessons ? findParentLesson(course.lessons, currentTopicId) : null, [course, currentTopicId]);
+  const lessonTopics = parentLesson?.topics ?? [];
+  const currentTopicIndexInLesson = lessonTopics.findIndex((t) => t.id === currentTopicId);
+  const prerequisiteTopic = currentTopicIndexInLesson > 0 ? lessonTopics[currentTopicIndexInLesson - 1] : null;
   const isPrerequisiteLocked = isEnrolled && !!prerequisiteTopic && !isTopicFinished(prerequisiteTopic.id);
 
   // Compliance: video must be 90% watched / quiz must be passed before mark-complete

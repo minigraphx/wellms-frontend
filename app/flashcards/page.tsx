@@ -20,6 +20,7 @@ export interface Flashcard {
 const CARDS_KEY = "flashcards_v1";
 
 export function loadCards(): Flashcard[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(CARDS_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -27,6 +28,7 @@ export function loadCards(): Flashcard[] {
 }
 
 export function saveCards(cards: Flashcard[]) {
+  if (typeof window === "undefined") return;
   localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
 }
 

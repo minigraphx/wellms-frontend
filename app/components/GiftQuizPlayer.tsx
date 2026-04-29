@@ -318,12 +318,11 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
       const maxScore = finished?.max_score ?? attempt.max_score ?? 0;
       setScore({ result: resultScore, max: maxScore });
       setFinished(true);
+      const pct = maxScore > 0 ? Math.round((resultScore / maxScore) * 100) : 0;
       if (onComplete) onComplete();
-      const pctNow = maxScore > 0 ? Math.round((resultScore / maxScore) * 100) : 0;
-      if (pctNow >= 60 && onPass) onPass();
+      if (pct >= 60 && onPass) onPass();
 
       // Fetch AI gap analysis for incomplete scores
-      const pct = maxScore > 0 ? Math.round((resultScore / maxScore) * 100) : 0;
       if (pct < 100 && questions.length > 0) {
         setGapLoading(true);
         const questionSummary = questions

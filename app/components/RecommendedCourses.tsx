@@ -63,7 +63,7 @@ export function RecommendedCourses({ enrolledTitles, allCourses, enrolledIds }: 
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [enrolledTitles.join(","), allCourses.length]);
 
   if (loading) {
     return (

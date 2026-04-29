@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
-import type { API } from "@escolalms/sdk/lib";
 
 type SDKNotification = {
   id: string;
@@ -36,7 +35,7 @@ export function NotificationBell() {
     fetchNotifications();
     const iv = setInterval(fetchNotifications, 60_000);
     return () => clearInterval(iv);
-  }, [user?.value]);
+  }, [user?.value, fetchNotifications]);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -59,7 +58,7 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={`Notifications${unread > 0 ? `, ${unread} unread` : ""}`}
+        aria-label={`Benachrichtigungen${unread > 0 ? `, ${unread} ungelesen` : ""}`}
         className="relative text-[#555555] hover:text-[#1abc9c] transition-colors"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -76,20 +75,20 @@ export function NotificationBell() {
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-xl shadow-lg z-40 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
-            <p className="text-sm font-semibold text-[#04323e]">Notifications</p>
+            <p className="text-sm font-semibold text-[#04323e]">Benachrichtigungen</p>
             {unread > 0 && (
               <button
                 onClick={() => readAllNotifications()}
                 className="text-xs text-[#1abc9c] hover:underline"
               >
-                Mark all read
+                Alle als gelesen markieren
               </button>
             )}
           </div>
 
           <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
             {items.length === 0 && (
-              <li className="px-4 py-6 text-sm text-gray-400 text-center">No notifications</li>
+              <li className="px-4 py-6 text-sm text-gray-400 text-center">Keine Benachrichtigungen</li>
             )}
             {items.slice(0, 20).map((n) => (
               <li

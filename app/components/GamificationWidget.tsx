@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 const POINTS_KEY = "gamification_points_v1";
-const BADGES_KEY = "gamification_badges_v1";
 
 interface Badge {
   id: string;
@@ -47,6 +46,7 @@ export function awardPoints(extra = 0): { newBadges: Badge[] } {
   const updatedBadges = [...state.badges, ...newBadges.map((b) => b.id)];
   const updated: GamificationState = { points: newPoints, lessonsCompleted: newLessons, badges: updatedBadges };
   localStorage.setItem(POINTS_KEY, JSON.stringify(updated));
+  window.dispatchEvent(new Event("gamification-update"));
   return { newBadges };
 }
 
@@ -57,6 +57,9 @@ export function GamificationWidget() {
   useEffect(() => {
     setMounted(true);
     setState(loadGamification());
+    const refresh = () => setState(loadGamification());
+    window.addEventListener("gamification-update", refresh);
+    return () => window.removeEventListener("gamification-update", refresh);
   }, []);
 
   if (!mounted) return null;
