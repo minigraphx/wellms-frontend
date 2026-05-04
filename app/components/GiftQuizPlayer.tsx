@@ -254,7 +254,7 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${apiUrl}/api/topic-gift-quiz/attempt`, {
+      const res = await fetch(`${apiUrl}/api/quiz-attempts`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -292,7 +292,7 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
       for (const [qIdStr, val] of Object.entries(answers)) {
         const qId = Number(qIdStr);
         const answerStr = Array.isArray(val) ? val.join(",") : val;
-        await fetch(`${apiUrl}/api/topic-gift-quiz/answer`, {
+        await fetch(`${apiUrl}/api/quiz-answers`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -304,7 +304,7 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
       }
 
       // Finish attempt
-      const res = await fetch(`${apiUrl}/api/topic-gift-quiz/${attempt.id}/end`, {
+      const res = await fetch(`${apiUrl}/api/quiz-attempts/${attempt.id}/end`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
