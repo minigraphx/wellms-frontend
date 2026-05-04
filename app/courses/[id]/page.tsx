@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCurriculum } from "../../components/CourseCurriculum";
+import { DiscourseEmbed } from "../../components/DiscourseEmbed";
 import { useToast } from "../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
@@ -37,6 +38,7 @@ export default function CoursePage() {
   const [enrollError, setEnrollError] = useState("");
   const [mounted, setMounted] = useState(false);
   const [accessExpiry, setAccessExpiry] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"curriculum" | "discussion">("curriculum");
 
   useEffect(() => {
     setMounted(true);
@@ -281,11 +283,28 @@ export default function CoursePage() {
         </div>
       )}
 
-      {course.lessons && course.lessons.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold text-[#04323e] mb-4">Curriculum</h2>
-          <CourseCurriculum lessons={course.lessons} courseId={courseId} isEnrolled={isEnrolled} />
-        </div>
+      <div className="flex gap-1 border-b border-gray-100 mb-6">
+        {(["curriculum", "discussion"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
+              activeTab === tab
+                ? "text-[#1abc9c] border-b-2 border-[#1abc9c]"
+                : "text-gray-400 hover:text-[#555555]"
+            }`}
+          >
+            {tab === "curriculum" ? "Lehrplan" : "Diskussion"}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "curriculum" && course.lessons && course.lessons.length > 0 && (
+        <CourseCurriculum lessons={course.lessons} courseId={courseId} isEnrolled={isEnrolled} />
+      )}
+
+      {activeTab === "discussion" && (
+        <DiscourseEmbed topicId={courseId} />
       )}
     </main>
   );
