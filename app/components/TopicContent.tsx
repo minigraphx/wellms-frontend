@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import type { API } from "@escolalms/sdk/lib";
 import { TopicType } from "@escolalms/sdk/lib/types/enums";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
@@ -12,6 +12,8 @@ interface TopicContentProps {
   topic: API.Topic;
   onVideoEnded?: () => void;
   onComplete?: () => void;
+  onWatchedEnough?: () => void;
+  onPass?: () => void;
 }
 
 function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
@@ -48,7 +50,33 @@ function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
   );
 }
 
-export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentProps) {
+function VideoPlayer({ src, poster, onEnded, onWatchedEnough }: {
+  src: string;
+  poster?: string;
+  onEnded?: () => void;
+  onWatchedEnough?: () => void;
+}) {
+  const watchedFired = useRef(false);
+  return (
+    <video
+      src={src}
+      poster={poster}
+      controls
+      onEnded={onEnded}
+      onTimeUpdate={(e) => {
+        if (watchedFired.current || !onWatchedEnough) return;
+        const v = e.currentTarget;
+        if (v.duration > 0 && v.currentTime / v.duration >= 0.9) {
+          watchedFired.current = true;
+          onWatchedEnough();
+        }
+      }}
+      className="w-full rounded-lg aspect-video bg-black"
+    />
+  );
+}
+
+export function TopicContent({ topic, onVideoEnded, onComplete, onWatchedEnough, onPass }: TopicContentProps) {
   if (!topic.topicable_type) {
     return <p className="text-gray-500">No content available.</p>;
   }
@@ -65,15 +93,7 @@ export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentPr
 
     case TopicType.Video: {
       const t = topic as API.TopicVideo;
-      return (
-        <video
-          src={t.topicable.url}
-          poster={t.topicable.poster_url}
-          controls
-          onEnded={onVideoEnded}
-          className="w-full rounded-lg aspect-video bg-black"
-        />
-      );
+      return <VideoPlayer src={t.topicable.url} poster={t.topicable.poster_url} onEnded={onVideoEnded} onWatchedEnough={onWatchedEnough} />;
     }
 
     case TopicType.OEmbed: {
@@ -121,10 +141,10 @@ export function TopicContent({ topic, onVideoEnded, onComplete }: TopicContentPr
     }
 
     case TopicType.Project:
-      return <ProjectUpload topicId={topic.id} />;
+      return <ProjectUpload topicId={topic.id} topicTitle={topic.title} />;
 
     case TopicType.GiftQuiz:
-      return <GiftQuizPlayer topic={topic as API.TopicQuiz} onComplete={onVideoEnded} />;
+      return <GiftQuizPlayer topic={topic as API.TopicQuiz} onComplete={onVideoEnded} onPass={onPass} />;
 
     default: {
       const unknown = topic as API.Topic;

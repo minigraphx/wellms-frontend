@@ -5,6 +5,7 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCard } from "./components/CourseCard";
 import { Nav } from "./components/Nav";
+import { RecommendedCourses } from "./components/RecommendedCourses";
 import type { API } from "@escolalms/sdk/lib";
 
 export default function Home() {
@@ -91,6 +92,11 @@ export default function Home() {
     return new Set<number>();
   }, [myCourses]);
 
+  const enrolledTitles = useMemo(
+    () => allCourses.filter((c) => enrolledIds.has(c.id)).map((c) => c.title),
+    [allCourses, enrolledIds]
+  );
+
   function handleCategory(id: number | null) {
     setActiveCategoryId(id);
     setSearch("");
@@ -119,6 +125,14 @@ export default function Home() {
               My courses →
             </Link>
           </div>
+        )}
+
+        {loggedIn && enrolledTitles.length > 0 && (
+          <RecommendedCourses
+            enrolledTitles={enrolledTitles}
+            allCourses={allCourses}
+            enrolledIds={enrolledIds}
+          />
         )}
 
         <div className="flex items-center justify-between mb-4 gap-4">

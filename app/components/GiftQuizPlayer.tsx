@@ -13,6 +13,7 @@ type AnswerMap = Record<number, string | string[]>;
 interface Props {
   topic: API.TopicQuiz;
   onComplete?: () => void;
+  onPass?: () => void;
 }
 
 // ─── Individual question renderers ──────────────────────────────────────────
@@ -231,7 +232,7 @@ function QuestionCard({
 
 // ─── Main quiz player ─────────────────────────────────────────────────────────
 
-export function GiftQuizPlayer({ topic, onComplete }: Props) {
+export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
   const ctx = useContext(EscolaLMSContext) as any;
   const { user, apiUrl, token } = ctx;
 
@@ -317,10 +318,11 @@ export function GiftQuizPlayer({ topic, onComplete }: Props) {
       const maxScore = finished?.max_score ?? attempt.max_score ?? 0;
       setScore({ result: resultScore, max: maxScore });
       setFinished(true);
+      const pct = maxScore > 0 ? Math.round((resultScore / maxScore) * 100) : 0;
       if (onComplete) onComplete();
+      if (pct >= 60 && onPass) onPass();
 
       // Fetch AI gap analysis for incomplete scores
-      const pct = maxScore > 0 ? Math.round((resultScore / maxScore) * 100) : 0;
       if (pct < 100 && questions.length > 0) {
         setGapLoading(true);
         const questionSummary = questions
