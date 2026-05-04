@@ -15,7 +15,9 @@ import { recordLessonCompletion } from "../../../../components/LearningGoalWidge
 import { recordLearningActivity } from "../../../../components/LearningNudge";
 import { awardPoints } from "../../../../components/GamificationWidget";
 import { TopicQA } from "../../../../components/TopicQA";
+import { TopicComments } from "../../../../components/TopicComments";
 import { GenerateFlashcardsButton } from "../../../../components/GenerateFlashcardsButton";
+import { ChatWidget } from "../../../../components/ChatWidget";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -401,8 +403,14 @@ export default function TopicPage() {
             {!isLocked && (
               <TopicQA topicId={currentTopicId} topicTitle={topic.title} />
             )}
+
+            {!isLocked && (
+              <TopicComments topicId={currentTopicId} isEnrolled={isEnrolled} />
+            )}
           </div>
         </div>
+
+        {isEnrolled && <ChatWidget label="Kurs-Chat" />}
 
         <footer className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-100 shrink-0">
           <div>

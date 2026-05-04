@@ -148,6 +148,20 @@ export function Nav() {
                       Orders
                     </Link>
                     <Link
+                      href="/community"
+                      onClick={() => setShowDropdown(false)}
+                      className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                    >
+                      Community
+                    </Link>
+                    <Link
+                      href="/messages"
+                      onClick={() => setShowDropdown(false)}
+                      className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
+                    >
+                      Nachrichten
+                    </Link>
+                    <Link
                       href="/bookmarks"
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
@@ -248,6 +262,12 @@ export function Nav() {
               </button>
               <Link href="/orders" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 Orders
+              </Link>
+              <Link href="/community" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                Community
+              </Link>
+              <Link href="/messages" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
+                Nachrichten
               </Link>
               <Link href="/profile" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
                 Profile

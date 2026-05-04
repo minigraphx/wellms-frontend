@@ -2,6 +2,7 @@
 
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { PeerReview } from "./PeerReview";
 import type { API } from "@escolalms/sdk/lib";
 
 interface Props {
@@ -19,6 +20,7 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
   const [success, setSuccess] = useState("");
   const [aiFeedback, setAiFeedback] = useState<string | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [showPeerReview, setShowPeerReview] = useState(false);
 
   const loadSubmissions = useCallback(async () => {
     if (!token) return;
@@ -57,6 +59,7 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
         setSuccess("Assignment submitted successfully!");
         if (fileRef.current) fileRef.current.value = "";
         await loadSubmissions();
+        setShowPeerReview(true);
         if (topicTitle) {
           setFeedbackLoading(true);
           try {
@@ -134,6 +137,10 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
           <p className="font-semibold mb-1">KI-Feedback</p>
           <p className="whitespace-pre-line">{aiFeedback}</p>
         </div>
+      )}
+
+      {showPeerReview && topicTitle && (
+        <PeerReview topicId={topicId} topicTitle={topicTitle} />
       )}
 
       {submissions.length > 0 && (
