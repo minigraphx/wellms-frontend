@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCurriculum } from "../../components/CourseCurriculum";
+import { Markdown } from "../../components/Markdown";
 import { useToast } from "../../components/Toast";
 import type { API } from "@escolalms/sdk/lib";
 
@@ -209,7 +210,7 @@ export default function CoursePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
         <div className="md:col-span-2">
           <h1 className="text-3xl font-bold text-[#04323e] mb-4">{course.title}</h1>
-          {course.summary && <p className="text-lg text-[#555555] mb-4">{course.summary}</p>}
+          <Markdown className="prose prose-lg max-w-none text-[#555555] mb-4" content={course.summary} />
 
           <div className="flex flex-wrap gap-2 mb-6">
             {course.level && (
@@ -277,7 +278,7 @@ export default function CoursePage() {
       {course.description && (
         <div className="mb-10">
           <h2 className="text-xl font-semibold text-[#04323e] mb-3">About this course</h2>
-          <div className="prose max-w-none text-[#555555]" dangerouslySetInnerHTML={{ __html: course.description }} />
+          <Markdown className="prose max-w-none text-[#555555]" content={course.description} />
         </div>
       )}
 

@@ -32,6 +32,14 @@ describe("TopicContent", () => {
     expect(screen.getByText("Hello world")).toBeInTheDocument();
   });
 
+  it("renders rich text Markdown as formatted content", () => {
+    const topic = makeTopic(TopicType.RichText, { value: "## Our Top Picks\n\n- **Einstieg** in den Editor" });
+    render(<TopicContent topic={topic} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Our Top Picks" })).toBeInTheDocument();
+    expect(screen.getByText("Einstieg").tagName).toBe("STRONG");
+    expect(screen.queryByText(/##/)).toBeNull();
+  });
+
   it("renders a video element for video topics", () => {
     const topic = makeTopic(TopicType.Video, { url: "http://example.com/video.mp4", poster_url: null });
     render(<TopicContent topic={topic} />);
