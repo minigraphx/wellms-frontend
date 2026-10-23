@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { loadCards, saveCards } from "../flashcards/page";
-import type { Flashcard } from "../flashcards/page";
+import { loadCards, saveCards } from "../flashcards/storage";
+import type { Flashcard } from "../flashcards/storage";
 
 interface Props {
   topicId: number;
