@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useState } from "react";
+import { Suspense, useCallback, useContext, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
@@ -24,7 +24,16 @@ function statusLabel(status: string | number): { label: string; color: string } 
   return { label: "Pending", color: "text-[#b8850a] bg-[#f2c94c]/20" };
 }
 
+// useSearchParams() needs a Suspense boundary, or prerendering fails at build time.
 export default function OrdersPage() {
+  return (
+    <Suspense>
+      <OrdersContent />
+    </Suspense>
+  );
+}
+
+function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { fetchOrders, fetchOrderInvoice, user } = useContext(EscolaLMSContext);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCard } from "../components/CourseCard";
@@ -8,7 +8,16 @@ import type { API } from "@escolalms/sdk/lib";
 
 const LEVELS = ["beginner", "intermediate", "advanced"] as const;
 
+// useSearchParams() needs a Suspense boundary, or prerendering fails at build time.
 export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchContent />
+    </Suspense>
+  );
+}
+
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
