@@ -7,6 +7,7 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { SCORMPlayer } from "@escolalms/sdk/lib/react";
 import { ProjectUpload } from "./ProjectUpload";
 import { GiftQuizPlayer } from "./GiftQuizPlayer";
+import { Markdown } from "./Markdown";
 
 interface TopicContentProps {
   topic: API.Topic;
@@ -84,10 +85,9 @@ export function TopicContent({ topic, onVideoEnded, onComplete, onWatchedEnough,
   switch (topic.topicable_type) {
     case TopicType.RichText:
       return (
-        <div
+        <Markdown
           className="prose prose-lg max-w-none text-[#555555]"
-          style={{ color: "#555555" }}
-          dangerouslySetInnerHTML={{ __html: (topic as API.TopicRichText).topicable.value }}
+          content={(topic as API.TopicRichText).topicable.value}
         />
       );
 
