@@ -7,6 +7,7 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCurriculum } from "../../components/CourseCurriculum";
 import { Markdown } from "../../components/Markdown";
 import { useToast } from "../../components/Toast";
+import { useViewer } from "../../components/useViewer";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -24,6 +25,8 @@ export default function CoursePage() {
   const {
     fetchProgram,
     program,
+    fetchCourse,
+    course: publicCourse,
     user,
     fetchCourseProgress,
     courseProgressDetails,
@@ -38,21 +41,19 @@ export default function CoursePage() {
   const [enrollError, setEnrollError] = useState("");
   const [mounted, setMounted] = useState(false);
   const [accessExpiry, setAccessExpiry] = useState<string | null>(null);
+  const viewer = useViewer();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    // Wait until we know auth state before fetching (program endpoint requires auth)
-    if (!mounted) return;
-    if (!user.value) {
-      setLoading(false);
-      return;
-    }
+    if (viewer === "pending") return;
     setLoading(true);
-    fetchProgram(courseId).finally(() => setLoading(false));
-  }, [mounted, courseId, user.value]);
+    // The program endpoint needs a login; guests get the public course (free previews stay open).
+    const load = viewer === "guest" ? fetchCourse(courseId) : fetchProgram(courseId);
+    load.finally(() => setLoading(false));
+  }, [viewer, courseId]);
 
   useEffect(() => {
     if (!mounted || !user.value) return;
@@ -67,7 +68,7 @@ export default function CoursePage() {
     });
   }, [mounted, courseId, user.value]);
 
-  const course = program.value;
+  const course = viewer === "guest" ? (publicCourse.value as API.CourseProgram | undefined) : program.value;
 
   const allTopics = useMemo(
     () => (course?.lessons ? flattenTopics(course.lessons) : []),
@@ -136,21 +137,6 @@ export default function CoursePage() {
 
   if (loading) {
     return <div className="max-w-4xl mx-auto px-4 py-12 text-[#555555]">Loading...</div>;
-  }
-
-  if (!user.value) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-24 text-center">
-        <h2 className="text-2xl font-bold text-[#04323e] mb-3">Sign in to view this course</h2>
-        <p className="text-[#555555] mb-6">You need an account to access course content.</p>
-        <Link
-          href="/"
-          className="inline-block bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-8 py-3 rounded-full transition-colors"
-        >
-          Sign in
-        </Link>
-      </div>
-    );
   }
 
   if (!course) {
