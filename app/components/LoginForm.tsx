@@ -1,7 +1,8 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext, useId, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { loginErrorMessage } from "./authErrors";
 
 export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const { login } = useContext(EscolaLMSContext);
@@ -9,6 +10,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const id = useId();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,10 +21,10 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
       if (res.success) {
         onSuccess?.();
       } else {
-        setError("Invalid email or password.");
+        setError(loginErrorMessage(res));
       }
-    } catch {
-      setError("Invalid email or password.");
+    } catch (err) {
+      setError(loginErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -31,8 +33,9 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-[#04323e] mb-1">Email</label>
+        <label htmlFor={`${id}-email`} className="block text-sm font-medium text-[#04323e] mb-1">Email</label>
         <input
+          id={`${id}-email`}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -42,10 +45,11 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-sm font-medium text-[#04323e]">Password</label>
+          <label htmlFor={`${id}-password`} className="block text-sm font-medium text-[#04323e]">Password</label>
           <a href="/forgot-password" className="text-xs text-[#1abc9c] hover:underline">Forgot password?</a>
         </div>
         <input
+          id={`${id}-password`}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
