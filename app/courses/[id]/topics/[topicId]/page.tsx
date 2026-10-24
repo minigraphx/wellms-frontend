@@ -18,6 +18,7 @@ import { TopicQA } from "../../../../components/TopicQA";
 import { GenerateFlashcardsButton } from "../../../../components/GenerateFlashcardsButton";
 import { GuestTopicView } from "../../../../components/GuestTopicView";
 import { useViewer } from "../../../../components/useViewer";
+import { parseCourseId } from "../../../../lib/seo";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -46,13 +47,13 @@ export default function TopicPage() {
 
   if (viewer === "pending") return <div className="max-w-3xl mx-auto px-4 py-12 text-[#555555]">Loading...</div>;
   // The member view needs the program endpoint (login); guests get free previews only.
-  if (viewer === "guest") return <GuestTopicView courseId={Number(id)} topicId={Number(topicId)} />;
+  if (viewer === "guest") return <GuestTopicView courseId={parseCourseId(id) ?? 0} topicId={Number(topicId)} />;
   return <MemberTopicPage />;
 }
 
 function MemberTopicPage() {
   const { id, topicId } = useParams<{ id: string; topicId: string }>();
-  const courseId = Number(id);
+  const courseId = parseCourseId(id) ?? 0;
   const currentTopicId = Number(topicId);
   const router = useRouter();
   const { toast } = useToast();

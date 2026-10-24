@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { QuestionnaireWidget } from "../../../components/QuestionnaireWidget";
+import { parseCourseId } from "../../../lib/seo";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -18,7 +19,7 @@ function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
 
 export default function CourseCompletePage() {
   const { id } = useParams<{ id: string }>();
-  const courseId = Number(id);
+  const courseId = parseCourseId(id) ?? 0;
   const router = useRouter();
 
   const {
