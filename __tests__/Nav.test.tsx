@@ -1,8 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+const mockRefresh = jest.fn();
+
 jest.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useRouter: () => ({ refresh: mockRefresh }),
 }));
 
 jest.mock("../app/components/LoginForm", () => ({
@@ -10,6 +13,8 @@ jest.mock("../app/components/LoginForm", () => ({
     <button onClick={onSuccess}>Mock login</button>
   ),
 }));
+
+jest.mock("../app/components/NotificationBell", () => ({ NotificationBell: () => null }));
 
 jest.mock("@escolalms/sdk/lib/react/context", () => {
   const React = require("react");
@@ -30,39 +35,41 @@ const loggedInValue = {
   },
   logout: jest.fn(),
   fetchMyCourses: jest.fn(),
+  fetchCart: jest.fn(),
+  cart: { value: null },
 };
 
 describe("Nav — desktop", () => {
-  it("shows Sign in button when logged out", () => {
+  it("shows the sign-in button in German by default", () => {
     render(<Nav />);
-    expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Anmelden" })).toBeInTheDocument();
   });
 });
 
 describe("Nav — mobile hamburger", () => {
   it("renders the hamburger open button", () => {
     render(<Nav />);
-    expect(screen.getByRole("button", { name: /open menu/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Menü öffnen" })).toBeInTheDocument();
   });
 
   it("opens the mobile menu when hamburger is clicked", async () => {
     const user = userEvent.setup();
     render(<Nav />);
 
-    await user.click(screen.getByRole("button", { name: /open menu/i }));
+    await user.click(screen.getByRole("button", { name: "Menü öffnen" }));
 
-    expect(screen.getByRole("button", { name: /close menu/i })).toBeInTheDocument();
-    expect(screen.getByText("Create account")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Menü schliessen" })).toBeInTheDocument();
+    expect(screen.getByText("Konto erstellen")).toBeInTheDocument();
   });
 
   it("closes the mobile menu on second click", async () => {
     const user = userEvent.setup();
     render(<Nav />);
 
-    await user.click(screen.getByRole("button", { name: /open menu/i }));
-    await user.click(screen.getByRole("button", { name: /close menu/i }));
+    await user.click(screen.getByRole("button", { name: "Menü öffnen" }));
+    await user.click(screen.getByRole("button", { name: "Menü schliessen" }));
 
-    expect(screen.queryByText("Create account")).not.toBeInTheDocument();
+    expect(screen.queryByText("Konto erstellen")).not.toBeInTheDocument();
   });
 
   it("shows My courses and Sign out in mobile menu when logged in", async () => {
@@ -73,9 +80,21 @@ describe("Nav — mobile hamburger", () => {
       </EscolaLMSContext.Provider>
     );
 
-    await user.click(screen.getByRole("button", { name: /open menu/i }));
+    await user.click(screen.getByRole("button", { name: "Menü öffnen" }));
 
-    expect(screen.getAllByText("My courses").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: /sign out/i })).toBeInTheDocument();
+    expect(screen.getAllByText("Meine Kurse").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Abmelden" })).toBeInTheDocument();
+  });
+});
+
+describe("Nav — language", () => {
+  it("stores the chosen language in a cookie and re-renders the page", async () => {
+    const user = userEvent.setup();
+    render(<Nav />);
+
+    await user.click(screen.getByRole("button", { name: "en" }));
+
+    expect(document.cookie).toContain("lang=en");
+    expect(mockRefresh).toHaveBeenCalled();
   });
 });

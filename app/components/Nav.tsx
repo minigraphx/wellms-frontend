@@ -7,6 +7,9 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { LoginForm } from "./LoginForm";
 import { CartDrawer } from "./CartDrawer";
 import { NotificationBell } from "./NotificationBell";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useT } from "../i18n/I18nProvider";
+import { SITE_NAME } from "../lib/seo";
 import type { API } from "@escolalms/sdk/lib";
 
 export function Nav() {
@@ -17,6 +20,7 @@ export function Nav() {
   const [showCart, setShowCart] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const t = useT();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,14 +71,15 @@ export function Nav() {
     <>
       <nav className="border-b bg-white px-4 py-3 flex items-center justify-between relative z-30">
         <Link href="/" className="font-bold text-[#04323e] hover:text-[#1abc9c] transition-colors">
-          Wellms
+          {SITE_NAME}
         </Link>
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-4">
+          <LanguageSwitcher />
           <Link
             href="/search"
-            aria-label="Search courses"
+            aria-label={t.nav.searchCourses}
             className={`text-sm transition-colors ${
               pathname === "/search" ? "text-[#1abc9c]" : "text-[#555555] hover:text-[#1abc9c]"
             }`}
@@ -87,7 +92,7 @@ export function Nav() {
 
           <button
             onClick={() => setShowCart(true)}
-            aria-label={`Cart${cartCount > 0 ? `, ${cartCount} items` : ""}`}
+            aria-label={t.nav.cart(cartCount)}
             className="relative text-[#555555] hover:text-[#1abc9c] transition-colors"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -110,13 +115,13 @@ export function Nav() {
                   pathname === "/dashboard" ? "text-[#1abc9c]" : "text-[#555555] hover:text-[#04323e]"
                 }`}
               >
-                My courses
+                {t.nav.myCourses}
               </Link>
 
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowDropdown((v) => !v)}
-                  aria-label="Open user menu"
+                  aria-label={t.nav.openUserMenu}
                   className="w-8 h-8 rounded-full bg-[#1abc9c]/10 text-[#1abc9c] text-sm font-bold flex items-center justify-center hover:bg-[#1abc9c]/20 transition-colors"
                 >
                   {(u as any)?.avatar ? (
@@ -138,35 +143,35 @@ export function Nav() {
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                     >
-                      Shop
+                      {t.nav.shop}
                     </Link>
                     <Link
                       href="/orders"
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                     >
-                      Orders
+                      {t.nav.orders}
                     </Link>
                     <Link
                       href="/bookmarks"
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                     >
-                      Bookmarks
+                      {t.nav.bookmarks}
                     </Link>
                     <Link
                       href="/flashcards"
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                     >
-                      Flashcards
+                      {t.nav.flashcards}
                     </Link>
                     <Link
                       href="/profile"
                       onClick={() => setShowDropdown(false)}
                       className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                     >
-                      Profile
+                      {t.nav.profile}
                     </Link>
                     {isTutor && (
                       <Link
@@ -174,14 +179,14 @@ export function Nav() {
                         onClick={() => setShowDropdown(false)}
                         className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                       >
-                        Tutor area
+                        {t.nav.tutorArea}
                       </Link>
                     )}
                     <button
                       onClick={() => { logout(); setShowDropdown(false); }}
                       className="w-full text-left px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#04323e] transition-colors"
                     >
-                      Sign out
+                      {t.common.signOut}
                     </button>
                   </div>
                 )}
@@ -192,7 +197,7 @@ export function Nav() {
               onClick={() => setShowLogin(true)}
               className="text-sm font-semibold bg-[#1abc9c] hover:bg-[#15a288] text-white px-5 py-1.5 rounded-full transition-colors"
             >
-              Sign in
+              {t.common.signIn}
             </button>
           )}
         </div>
@@ -200,7 +205,7 @@ export function Nav() {
         {/* Mobile hamburger */}
         <button
           onClick={() => setShowMobileMenu((v) => !v)}
-          aria-label={showMobileMenu ? "Close menu" : "Open menu"}
+          aria-label={showMobileMenu ? t.nav.closeMenu : t.nav.openMenu}
           aria-expanded={showMobileMenu}
           className="sm:hidden p-2 rounded-lg text-[#555555] hover:bg-gray-100 transition-colors"
         >
@@ -219,6 +224,7 @@ export function Nav() {
       {/* Mobile menu */}
       {showMobileMenu && (
         <div className="sm:hidden bg-white border-b border-gray-100 px-4 py-4 flex flex-col gap-3 z-20 shadow-sm">
+          <LanguageSwitcher />
           {loggedIn ? (
             <>
               <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
@@ -232,13 +238,13 @@ export function Nav() {
                 <p className="text-sm font-semibold text-[#04323e] truncate">{u?.first_name || u?.email}</p>
               </div>
               <Link href="/search" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                Search courses
+                {t.nav.searchCourses}
               </Link>
               <Link href="/dashboard" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                My courses
+                {t.nav.myCourses}
               </Link>
               <Link href="/shop" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                Shop
+                {t.nav.shop}
               </Link>
               <button
                 onClick={() => { setShowCart(true); setShowMobileMenu(false); }}
@@ -247,24 +253,24 @@ export function Nav() {
                 Cart {cartCount > 0 && `(${cartCount})`}
               </button>
               <Link href="/orders" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                Orders
+                {t.nav.orders}
               </Link>
               <Link href="/profile" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                Profile
+                {t.nav.profile}
               </Link>
               <Link href="/flashcards" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                Flashcards
+                {t.nav.flashcards}
               </Link>
               {isTutor && (
                 <Link href="/tutor" className="text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                  Tutor area
+                  {t.nav.tutorArea}
                 </Link>
               )}
               <button
                 onClick={() => { logout(); setShowMobileMenu(false); }}
                 className="text-left text-sm font-medium text-[#555555] hover:text-[#04323e] transition-colors py-1"
               >
-                Sign out
+                {t.common.signOut}
               </button>
             </>
           ) : (
@@ -273,13 +279,13 @@ export function Nav() {
                 onClick={() => { setShowLogin(true); setShowMobileMenu(false); }}
                 className="w-full text-center text-sm font-semibold bg-[#1abc9c] hover:bg-[#15a288] text-white px-5 py-2.5 rounded-full transition-colors"
               >
-                Sign in
+                {t.common.signIn}
               </button>
               <Link href="/search" className="text-center text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                Search courses
+                {t.nav.searchCourses}
               </Link>
               <Link href="/register" className="text-center text-sm font-medium text-[#555555] hover:text-[#1abc9c] transition-colors py-1">
-                Create account
+                {t.common.createAccount}
               </Link>
             </>
           )}

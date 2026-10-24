@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Figtree } from "next/font/google";
 import { Providers } from "./providers";
 import { SITE_NAME, SITE_URL } from "./lib/seo";
+import { getLocale } from "./i18n/server";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -27,15 +28,16 @@ export const viewport: Viewport = {
   themeColor: "#1abc9c",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
   return (
-    <html lang="en" className={`${figtree.variable} h-full`} style={{ colorScheme: "light", background: "#ffffff" }}>
+    <html lang={locale} className={`${figtree.variable} h-full`} style={{ colorScheme: "light", background: "#ffffff" }}>
       <body className="min-h-full flex flex-col bg-white text-[#555555]">
-        <Providers>{children}</Providers>
+        <Providers locale={locale}>{children}</Providers>
       </body>
     </html>
   );
