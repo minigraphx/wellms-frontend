@@ -8,6 +8,7 @@ import { SCORMPlayer } from "@escolalms/sdk/lib/react";
 import { ProjectUpload } from "./ProjectUpload";
 import { GiftQuizPlayer } from "./GiftQuizPlayer";
 import { Markdown } from "./Markdown";
+import { useT } from "../i18n/I18nProvider";
 
 interface TopicContentProps {
   topic: API.Topic;
@@ -21,6 +22,7 @@ function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
   const { fetchH5P, h5p, apiUrl } = useContext(EscolaLMSContext);
   const uuid = topic.topicable.content.uuid;
   const [loading, setLoading] = useState(true);
+  const t = useT();
 
   useEffect(() => {
     setLoading(true);
@@ -34,7 +36,7 @@ function H5PPlayer({ topic }: { topic: API.TopicH5P }) {
     : `${apiUrl}/api/hh5p/content/${uuid}/embed`;
 
   if (loading) {
-    return <div className="text-gray-400 py-8 text-center">Loading H5P content…</div>;
+    return <div className="text-gray-400 py-8 text-center">{t.player.content.loadingH5P}</div>;
   }
 
   return (
@@ -78,8 +80,10 @@ function VideoPlayer({ src, poster, onEnded, onWatchedEnough }: {
 }
 
 export function TopicContent({ topic, onVideoEnded, onComplete, onWatchedEnough, onPass }: TopicContentProps) {
+  const { content: text } = useT().player;
+
   if (!topic.topicable_type) {
-    return <p className="text-gray-500">No content available.</p>;
+    return <p className="text-gray-500">{text.noContent}</p>;
   }
 
   switch (topic.topicable_type) {
@@ -150,7 +154,7 @@ export function TopicContent({ topic, onVideoEnded, onComplete, onWatchedEnough,
       const unknown = topic as API.Topic;
       return (
         <p className="text-gray-500 italic">
-          Content type <code>{(unknown as any).topicable_type}</code> is not yet supported in this viewer.
+          {text.unsupportedBefore}<code>{(unknown as any).topicable_type}</code>{text.unsupportedAfter}
         </p>
       );
     }

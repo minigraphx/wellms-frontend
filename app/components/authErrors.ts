@@ -9,13 +9,16 @@ const apiMessage = (res: unknown) => (res as ApiResult)?.data?.message;
 
 export const isEmailNotConfirmed = (res: unknown) => apiMessage(res) === EMAIL_NOT_CONFIRMED;
 
-export function loginErrorMessage(res: unknown): string {
+// Key of the message in the `auth` dictionary: t.auth[loginErrorKey(res)].
+export type LoginErrorKey = "emailNotConfirmed" | "accountDeactivated" | "invalidCredentials";
+
+export function loginErrorKey(res: unknown): LoginErrorKey {
   switch (apiMessage(res)) {
     case EMAIL_NOT_CONFIRMED:
-      return "Please confirm your email address first, using the link in the email we sent you after registration.";
+      return "emailNotConfirmed";
     case ACCOUNT_DEACTIVATED:
-      return "This account has been deactivated. Please contact us.";
+      return "accountDeactivated";
     default:
-      return "Invalid email or password.";
+      return "invalidCredentials";
   }
 }

@@ -3,6 +3,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import type { API } from "@escolalms/sdk/lib";
+import { useT } from "../i18n/I18nProvider";
 
 interface Props {
   modelTypeTitle: string; // e.g. "Course"
@@ -17,6 +18,7 @@ function StarRating({
   onChange: (v: number) => void;
 }) {
   const [hover, setHover] = useState(0);
+  const t = useT();
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -26,7 +28,7 @@ function StarRating({
           onMouseEnter={() => setHover(star)}
           onMouseLeave={() => setHover(0)}
           onClick={() => onChange(star)}
-          aria-label={`${star} stars`}
+          aria-label={t.player.questionnaire.stars(star)}
           className="text-2xl transition-colors"
         >
           <span className={(hover || value) >= star ? "text-[#f2c94c]" : "text-gray-200"}>★</span>
@@ -38,6 +40,7 @@ function StarRating({
 
 export function QuestionnaireWidget({ modelTypeTitle, modelId }: Props) {
   const { fetchQuestionnaires, sendQuestionnaireAnswer, user } = useContext(EscolaLMSContext);
+  const t = useT();
 
   const [questionnaires, setQuestionnaires] = useState<API.Questionnaire[]>([]);
   const [answers, setAnswers] = useState<Record<number, { rate?: number; note?: string }>>({});
@@ -81,14 +84,14 @@ export function QuestionnaireWidget({ modelTypeTitle, modelId }: Props) {
   if (submitted) {
     return (
       <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm text-center">
-        <p className="text-[#1abc9c] font-semibold">✓ Thanks for your feedback!</p>
+        <p className="text-[#1abc9c] font-semibold">✓ {t.player.questionnaire.thanks}</p>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-6">
-      <h3 className="text-lg font-semibold text-[#04323e]">Rate this course</h3>
+      <h3 className="text-lg font-semibold text-[#04323e]">{t.player.questionnaire.rateCourse}</h3>
 
       {questionnaires.map((q) => (
         <div key={q.id} className="space-y-3">
@@ -121,7 +124,7 @@ export function QuestionnaireWidget({ modelTypeTitle, modelId }: Props) {
                     }))
                   }
                   rows={3}
-                  placeholder="Share your thoughts…"
+                  placeholder={t.player.questionnaire.shareThoughts}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c] resize-none"
                 />
               )}
@@ -135,7 +138,7 @@ export function QuestionnaireWidget({ modelTypeTitle, modelId }: Props) {
         disabled={submitting}
         className="bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
       >
-        {submitting ? "Submitting…" : "Submit feedback"}
+        {submitting ? t.player.questionnaire.submitting : t.player.questionnaire.submit}
       </button>
     </form>
   );

@@ -7,6 +7,7 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { QuestionnaireWidget } from "../../../components/QuestionnaireWidget";
 import { parseCourseId } from "../../../lib/seo";
 import type { API } from "@escolalms/sdk/lib";
+import { useT } from "../../../i18n/I18nProvider";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
   const result: API.Topic[] = [];
@@ -21,6 +22,7 @@ export default function CourseCompletePage() {
   const { id } = useParams<{ id: string }>();
   const courseId = parseCourseId(id) ?? 0;
   const router = useRouter();
+  const t = useT();
 
   const {
     user,
@@ -117,7 +119,7 @@ export default function CourseCompletePage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setDownloadError("Could not generate certificate. Please try again.");
+      setDownloadError(t.course.complete.downloadFailed);
     } finally {
       setDownloading(false);
     }
@@ -126,7 +128,7 @@ export default function CourseCompletePage() {
   if (!mounted || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-400">
-        Loading…
+        {t.common.loading}
       </div>
     );
   }
@@ -143,12 +145,12 @@ export default function CourseCompletePage() {
         </div>
 
         <div>
-          <h1 className="text-3xl font-bold text-[#04323e]">Course complete!</h1>
+          <h1 className="text-3xl font-bold text-[#04323e]">{t.course.complete.title}</h1>
           {course && (
             <p className="text-[#555555] mt-2 text-lg">{course.title}</p>
           )}
           <p className="text-gray-400 mt-1 text-sm">
-            Great work — you've finished all {allTopics.length} lessons.
+            {t.course.complete.finishedAll(allTopics.length)}
           </p>
         </div>
 
@@ -162,7 +164,7 @@ export default function CourseCompletePage() {
                 </svg>
               </div>
               <div className="text-left">
-                <p className="font-semibold text-[#04323e] text-sm">Certificate of completion</p>
+                <p className="font-semibold text-[#04323e] text-sm">{t.course.complete.certificate}</p>
                 <p className="text-xs text-gray-400">{cert.title ?? course?.title}</p>
               </div>
             </div>
@@ -171,7 +173,7 @@ export default function CourseCompletePage() {
               disabled={downloading}
               className="w-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold py-3 rounded-full transition-colors"
             >
-              {downloading ? "Generating…" : "Download certificate (PDF)"}
+              {downloading ? t.course.complete.generating : t.course.complete.download}
             </button>
             {downloadError && <p className="text-sm text-red-600">{downloadError}</p>}
 
@@ -179,17 +181,17 @@ export default function CourseCompletePage() {
               onClick={handleCopyLink}
               className="w-full border border-gray-200 hover:border-[#1abc9c] text-[#555555] hover:text-[#1abc9c] font-semibold py-2.5 rounded-full text-sm transition-colors"
             >
-              {copied ? "✓ Link copied!" : "Copy shareable link"}
+              {copied ? t.course.complete.linkCopied : t.course.complete.copyLink}
             </button>
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-sm text-gray-400">No certificate is configured for this course.</p>
+            <p className="text-sm text-gray-400">{t.course.complete.noCertificate}</p>
             <button
               onClick={handleCopyLink}
               className="w-full border border-gray-200 hover:border-[#1abc9c] text-[#555555] hover:text-[#1abc9c] font-semibold py-2.5 rounded-full text-sm transition-colors"
             >
-              {copied ? "✓ Link copied!" : "Copy shareable link"}
+              {copied ? t.course.complete.linkCopied : t.course.complete.copyLink}
             </button>
           </div>
         )}
@@ -203,13 +205,13 @@ export default function CourseCompletePage() {
             href="/dashboard"
             className="inline-block border border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
           >
-            My courses
+            {t.nav.myCourses}
           </Link>
           <Link
             href="/"
             className="inline-block border border-gray-200 text-[#555555] hover:border-gray-300 font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
           >
-            Browse more courses
+            {t.course.complete.browseMore}
           </Link>
         </div>
       </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { API } from "@escolalms/sdk/lib";
 import { ProgressBar } from "./ProgressBar";
 import { coursePath } from "../lib/seo";
+import { useT } from "../i18n/I18nProvider";
 
 interface CourseCardProps {
   course: API.CourseListItem;
@@ -12,6 +13,7 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps) {
+  const t = useT();
   return (
     // The title link stretches over the whole card (after:inset-0), so the author link can sit
     // on top of it instead of being nested inside another link.
@@ -20,7 +22,7 @@ export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps)
         <img src={course.image_url} alt={course.title} className="w-full h-44 object-cover" />
       ) : (
         <div className="w-full h-44 bg-gray-50 flex items-center justify-center text-gray-300 text-sm">
-          No image
+          {t.catalog.noImage}
         </div>
       )}
       <div className="p-5">
@@ -34,7 +36,7 @@ export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps)
                   : "bg-[#f2c94c]/20 text-[#b8850a]"
               }`}
             >
-              {progressPct === 100 ? "✓ Completed" : "In Progress"}
+              {progressPct === 100 ? `✓ ${t.catalog.completed}` : t.catalog.inProgress}
             </span>
           )}
           {course.level && (
@@ -44,7 +46,7 @@ export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps)
           )}
           {course.topic_count != null && (
             <span className="text-xs font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-              {course.topic_count} lessons
+              {t.common.lessonCount(course.topic_count)}
             </span>
           )}
         </div>

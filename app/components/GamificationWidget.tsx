@@ -1,23 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useFormat, useT } from "../i18n/I18nProvider";
+import type { Messages } from "../i18n/messages";
 
 const POINTS_KEY = "gamification_points_v1";
 
+// Badge names and descriptions live in the learner messages (gamification.badges), keyed by id.
+type BadgeId = keyof Messages["learner"]["gamification"]["badges"];
+
 interface Badge {
-  id: string;
-  name: string;
+  id: BadgeId;
   icon: string;
-  description: string;
   threshold: number; // lessons completed to earn
 }
 
 const BADGE_DEFINITIONS: Badge[] = [
-  { id: "first_step", name: "First Step", icon: "🌱", description: "Complete your first lesson", threshold: 1 },
-  { id: "getting_started", name: "Getting Started", icon: "🚀", description: "Complete 5 lessons", threshold: 5 },
-  { id: "committed", name: "Committed", icon: "🔥", description: "Complete 10 lessons", threshold: 10 },
-  { id: "scholar", name: "Scholar", icon: "📚", description: "Complete 25 lessons", threshold: 25 },
-  { id: "expert", name: "Expert", icon: "🏆", description: "Complete 50 lessons", threshold: 50 },
+  { id: "first_step", icon: "🌱", threshold: 1 },
+  { id: "getting_started", icon: "🚀", threshold: 5 },
+  { id: "committed", icon: "🔥", threshold: 10 },
+  { id: "scholar", icon: "📚", threshold: 25 },
+  { id: "expert", icon: "🏆", threshold: 50 },
 ];
 
 const POINTS_PER_LESSON = 10;
@@ -53,6 +56,9 @@ export function awardPoints(extra = 0): { newBadges: Badge[] } {
 export function GamificationWidget() {
   const [state, setState] = useState<GamificationState>({ points: 0, lessonsCompleted: 0, badges: [] });
   const [mounted, setMounted] = useState(false);
+  const t = useT();
+  const { number } = useFormat();
+  const g = t.learner.gamification;
 
   useEffect(() => {
     setMounted(true);
@@ -73,11 +79,11 @@ export function GamificationWidget() {
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-[#04323e] text-sm">Your Progress</h2>
-        <span className="text-xs font-bold text-[#1abc9c]">{state.points} XP</span>
+        <h2 className="font-semibold text-[#04323e] text-sm">{g.yourProgress}</h2>
+        <span className="text-xs font-bold text-[#1abc9c]">{g.points(number(state.points))}</span>
       </div>
 
-      <p className="text-xs text-gray-400 mb-2">{state.lessonsCompleted} lessons completed</p>
+      <p className="text-xs text-gray-400 mb-2">{g.lessonsCompleted(state.lessonsCompleted)}</p>
 
       {nextBadge && (
         <>
@@ -88,7 +94,7 @@ export function GamificationWidget() {
             />
           </div>
           <p className="text-xs text-gray-400 mb-3">
-            {nextBadge.icon} {state.lessonsCompleted}/{nextBadge.threshold} lessons to earn "{nextBadge.name}"
+            {nextBadge.icon} {g.toNextBadge(state.lessonsCompleted, nextBadge.threshold, g.badges[nextBadge.id].name)}
           </p>
         </>
       )}
@@ -98,7 +104,7 @@ export function GamificationWidget() {
           {earnedBadges.map((b) => (
             <span
               key={b.id}
-              title={b.description}
+              title={g.badges[b.id].description}
               className="text-lg cursor-default"
             >
               {b.icon}

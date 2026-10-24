@@ -59,13 +59,13 @@ describe("GuestTopicView", () => {
     expect(await screen.findByRole("heading", { level: 2, name: "Was ist ChatGPT?" })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith("https://api.example.com/api/courses/2/preview/26", expect.anything());
     expect(fetchCourse).toHaveBeenCalledWith(2);
-    expect(screen.getByRole("link", { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /melde dich an/i })).toBeInTheDocument();
   });
 
   it("asks guests to sign in for lessons that are not a free preview", async () => {
     render(<GuestTopicView courseId={2} topicId={27} />);
 
-    expect(await screen.findByText(/sign in or create an account/i)).toBeInTheDocument();
+    expect(await screen.findByText(/melde dich an oder erstelle ein konto/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "1.3 Konto erstellen" })).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -73,7 +73,7 @@ describe("GuestTopicView", () => {
   it("says so when the lesson is not part of the course", async () => {
     render(<GuestTopicView courseId={2} topicId={999} />);
 
-    expect(await screen.findByText(/lesson not found/i)).toBeInTheDocument();
+    expect(await screen.findByText(/lektion nicht gefunden/i)).toBeInTheDocument();
   });
 
   it("shows an error when the preview cannot be loaded", async () => {
@@ -81,6 +81,6 @@ describe("GuestTopicView", () => {
 
     render(<GuestTopicView courseId={2} topicId={26} />);
 
-    await waitFor(() => expect(screen.getByText(/could not load this lesson/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/konnten diese lektion nicht laden/i)).toBeInTheDocument());
   });
 });

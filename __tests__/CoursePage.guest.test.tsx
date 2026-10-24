@@ -57,7 +57,7 @@ describe("CoursePage for guests", () => {
     expect(fetchCourse).toHaveBeenCalledWith(2);
     expect(fetchProgram).not.toHaveBeenCalled();
     expect(screen.queryByText(/sign in to view this course/i)).toBeNull();
-    expect(screen.getByText(/to enroll/i)).toBeInTheDocument();
+    expect(screen.getByText(/um dich einzuschreiben/i)).toBeInTheDocument();
   });
 
   it("renders the server-fetched course right away and ignores another course left in the context", () => {
@@ -68,7 +68,7 @@ describe("CoursePage for guests", () => {
 
     expect(screen.getByRole("heading", { level: 1, name: "Vom Server geladen" })).toBeInTheDocument();
     expect(screen.queryByText(mockPublicCourse.title)).toBeNull();
-    expect(screen.queryByText("Loading...")).toBeNull();
+    expect(screen.queryByText("Wird geladen…")).toBeNull();
   });
 
   it("links free preview lessons and keeps the others locked", async () => {

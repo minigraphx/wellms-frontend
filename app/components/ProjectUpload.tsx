@@ -3,6 +3,7 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import type { API } from "@escolalms/sdk/lib";
+import { useFormat, useT } from "../i18n/I18nProvider";
 
 interface Props {
   topicId: number;
@@ -12,6 +13,8 @@ interface Props {
 export function ProjectUpload({ topicId, topicTitle }: Props) {
   const { user, apiUrl, token } = useContext(EscolaLMSContext) as any;
   const fileRef = useRef<HTMLInputElement>(null);
+  const t = useT();
+  const { date } = useFormat();
 
   const [submissions, setSubmissions] = useState<API.ProjectFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -54,7 +57,7 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
         body: form,
       });
       if (res.ok) {
-        setSuccess("Assignment submitted successfully!");
+        setSuccess(t.player.project.uploadSuccess);
         if (fileRef.current) fileRef.current.value = "";
         await loadSubmissions();
         if (topicTitle) {
@@ -81,25 +84,25 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
         }
       } else {
         const json = await res.json().catch(() => ({}));
-        setError(json?.message ?? "Upload failed. Please try again.");
+        setError(json?.message ?? t.player.project.uploadFailed);
       }
     } catch {
-      setError("Upload failed. Please try again.");
+      setError(t.player.project.uploadFailed);
     } finally {
       setUploading(false);
     }
-  }, [apiUrl, token, topicId, topicTitle, loadSubmissions]);
+  }, [apiUrl, token, topicId, topicTitle, loadSubmissions, t]);
 
   if (!user.value) {
-    return <p className="text-gray-400 text-sm">Sign in to submit your assignment.</p>;
+    return <p className="text-gray-400 text-sm">{t.player.project.signIn}</p>;
   }
 
   return (
     <div className="space-y-4">
       <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-[#1abc9c] transition-colors">
         <p className="text-4xl mb-2">📎</p>
-        <p className="text-sm font-medium text-[#04323e] mb-1">Upload your assignment</p>
-        <p className="text-xs text-gray-400 mb-4">Any file format accepted</p>
+        <p className="text-sm font-medium text-[#04323e] mb-1">{t.player.project.uploadTitle}</p>
+        <p className="text-xs text-gray-400 mb-4">{t.player.project.anyFormat}</p>
         <input
           ref={fileRef}
           type="file"
@@ -111,7 +114,7 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
           htmlFor="project-upload"
           className="inline-block cursor-pointer border border-gray-200 text-sm font-medium text-[#555555] hover:border-[#1abc9c] hover:text-[#1abc9c] px-4 py-2 rounded-full transition-colors"
         >
-          Choose file
+          {t.player.project.chooseFile}
         </label>
       </div>
 
@@ -120,25 +123,25 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
         disabled={uploading}
         className="w-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold py-3 rounded-full transition-colors"
       >
-        {uploading ? "Uploading…" : "Submit assignment"}
+        {uploading ? t.player.project.uploading : t.player.project.submit}
       </button>
 
       {success && <p className="text-sm text-[#1abc9c] font-medium">{success}</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {feedbackLoading && (
-        <p className="text-sm text-amber-600 animate-pulse">KI analysiert deine Abgabe…</p>
+        <p className="text-sm text-amber-600 animate-pulse">{t.player.project.aiReviewing}</p>
       )}
       {aiFeedback && !feedbackLoading && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 leading-relaxed">
-          <p className="font-semibold mb-1">KI-Feedback</p>
+          <p className="font-semibold mb-1">{t.player.project.aiFeedback}</p>
           <p className="whitespace-pre-line">{aiFeedback}</p>
         </div>
       )}
 
       {submissions.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-semibold text-[#04323e] mb-2">Previous submissions</h4>
+          <h4 className="text-sm font-semibold text-[#04323e] mb-2">{t.player.project.previousSubmissions}</h4>
           <ul className="space-y-2">
             {submissions.map((s) => (
               <li key={s.id} className="flex items-center justify-between text-sm text-[#555555] bg-gray-50 rounded-lg px-3 py-2">
@@ -148,10 +151,10 @@ export function ProjectUpload({ topicId, topicTitle }: Props) {
                   rel="noopener noreferrer"
                   className="text-[#1abc9c] hover:underline truncate"
                 >
-                  Submission #{s.id}
+                  {t.player.project.submission(s.id)}
                 </a>
                 <span className="text-xs text-gray-400 shrink-0 ml-4">
-                  {new Date(s.created_at).toLocaleDateString()}
+                  {date(s.created_at)}
                 </span>
               </li>
             ))}

@@ -8,6 +8,9 @@ const mockNotFound = jest.fn(() => {
   throw new Error("NOT_FOUND");
 });
 
+// getT() reads the language cookie; no cookie means German.
+jest.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }));
+
 jest.mock("next/navigation", () => ({
   permanentRedirect: (url: string) => mockRedirect(url),
   notFound: () => mockNotFound(),
@@ -80,6 +83,7 @@ describe("course page (server)", () => {
     const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.textContent!);
     expect(ld[0]).toMatchObject({ "@type": "Course", name: course.title, inLanguage: "de" });
     expect(ld[1]).toMatchObject({ "@type": "BreadcrumbList" });
+    expect(ld[1].itemListElement[0]).toMatchObject({ position: 1, name: "Kurse" });
   });
 
   it("still renders the client for members when the course isn't public (drafts)", async () => {

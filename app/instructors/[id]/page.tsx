@@ -6,12 +6,14 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../../components/Nav";
 import { CourseCard } from "../../components/CourseCard";
+import { useT } from "../../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 export default function InstructorPage() {
   const { id } = useParams<{ id: string }>();
   const tutorId = Number(id);
   const { fetchTutor, fetchCourses, myCourses, fetchMyCourses, user } = useContext(EscolaLMSContext);
+  const t = useT();
 
   const [tutor, setTutor] = useState<API.UserItem | null>(null);
   const [courses, setCourses] = useState<API.CourseListItem[]>([]);
@@ -46,12 +48,12 @@ export default function InstructorPage() {
     <>
       <Nav />
       <main className="max-w-4xl mx-auto px-4 py-12">
-        {loading && <p className="text-gray-500">Loading…</p>}
+        {loading && <p className="text-gray-500">{t.common.loading}</p>}
 
         {!loading && !tutor && (
           <div className="text-center py-20">
-            <p className="text-gray-400 mb-4">Instructor not found.</p>
-            <Link href="/" className="text-[#1abc9c] hover:underline">Browse courses</Link>
+            <p className="text-gray-400 mb-4">{t.catalog.instructorNotFound}</p>
+            <Link href="/" className="text-[#1abc9c] hover:underline">{t.catalog.browseCourses}</Link>
           </div>
         )}
 
@@ -92,11 +94,11 @@ export default function InstructorPage() {
 
             {/* Courses by this instructor */}
             <h2 className="text-xl font-semibold text-[#04323e] mb-4">
-              Courses by {tutor.first_name}
+              {t.catalog.coursesBy(tutor.first_name)}
             </h2>
 
             {courses.length === 0 ? (
-              <p className="text-gray-400">No courses published yet.</p>
+              <p className="text-gray-400">{t.catalog.noCoursesYet}</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {courses.map((course) => (

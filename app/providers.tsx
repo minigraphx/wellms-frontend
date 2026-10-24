@@ -3,9 +3,14 @@
 import { EscolaLMSContextProvider } from "@escolalms/sdk/lib/react";
 import { ToastProvider } from "./components/Toast";
 import { I18nProvider } from "./i18n/I18nProvider";
+import { installApiLocaleInterceptor, setApiLocale } from "./i18n/apiLocale";
 import type { Locale } from "./i18n/config";
 
 export function Providers({ locale, children }: { locale: Locale; children: React.ReactNode }) {
+  // Set during render, not in an effect: child effects (the first SDK requests) run before ours.
+  installApiLocaleInterceptor();
+  setApiLocale(locale);
+
   return (
     <I18nProvider locale={locale}>
       <EscolaLMSContextProvider apiUrl={process.env.NEXT_PUBLIC_API_URL!}>

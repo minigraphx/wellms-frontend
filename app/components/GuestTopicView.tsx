@@ -5,6 +5,7 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import type { API } from "@escolalms/sdk/lib";
 import { TopicContent } from "./TopicContent";
+import { useT } from "../i18n/I18nProvider";
 
 interface GuestTopicViewProps {
   courseId: number;
@@ -27,6 +28,7 @@ export function GuestTopicView({ courseId, topicId }: GuestTopicViewProps) {
   const { apiUrl, fetchCourse, course } = useContext(EscolaLMSContext);
   const [courseLoaded, setCourseLoaded] = useState(false);
   const [preview, setPreview] = useState<PreviewState>({ status: "idle" });
+  const t = useT();
 
   useEffect(() => {
     fetchCourse(courseId).finally(() => setCourseLoaded(true));
@@ -52,14 +54,14 @@ export function GuestTopicView({ courseId, topicId }: GuestTopicViewProps) {
   }, [apiUrl, courseId, topicId, topic?.preview]);
 
   if (!courseLoaded && !courseData) {
-    return <div className="max-w-3xl mx-auto px-4 py-12 text-[#555555]">Loading...</div>;
+    return <div className="max-w-3xl mx-auto px-4 py-12 text-[#555555]">{t.common.loading}</div>;
   }
 
   if (!topic) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-24 text-center">
-        <p className="text-[#555555] mb-4">Lesson not found.</p>
-        <Link href={`/courses/${courseId}`} className="text-[#1abc9c] hover:underline font-medium">Back to the course</Link>
+        <p className="text-[#555555] mb-4">{t.course.guest.lessonNotFound}</p>
+        <Link href={`/courses/${courseId}`} className="text-[#1abc9c] hover:underline font-medium">{t.course.guest.backToCourse}</Link>
       </div>
     );
   }
@@ -74,20 +76,20 @@ export function GuestTopicView({ courseId, topicId }: GuestTopicViewProps) {
       {topic.preview ? (
         <>
           {preview.status === "loaded" && <TopicContent topic={preview.topic} />}
-          {(preview.status === "loading" || preview.status === "idle") && <p className="text-[#555555]">Loading...</p>}
-          {preview.status === "error" && <p className="text-red-600">We could not load this lesson. Please try again later.</p>}
+          {(preview.status === "loading" || preview.status === "idle") && <p className="text-[#555555]">{t.common.loading}</p>}
+          {preview.status === "error" && <p className="text-red-600">{t.course.guest.previewError}</p>}
           <p className="mt-10 text-sm text-[#555555] border-t border-gray-100 pt-6">
-            This is a free preview.{" "}
-            <Link href="/" className="text-[#1abc9c] hover:underline font-medium">Sign in</Link> or{" "}
-            <Link href="/register" className="text-[#1abc9c] hover:underline font-medium">create an account</Link> to enroll in the course.
+            {t.course.guest.freePreview}{" "}
+            <Link href="/" className="text-[#1abc9c] hover:underline font-medium">{t.course.signInLink}</Link> {t.course.guest.or}{" "}
+            <Link href="/register" className="text-[#1abc9c] hover:underline font-medium">{t.course.guest.createAccountLink}</Link>{t.course.guest.toEnrollInCourse}
           </p>
         </>
       ) : (
         <div className="rounded-xl border border-gray-100 bg-gray-50 px-6 py-10 text-center">
-          <p className="text-[#555555] mb-4">This lesson is part of the course. Sign in or create an account to access it.</p>
+          <p className="text-[#555555] mb-4">{t.course.guest.locked}</p>
           <div className="flex justify-center gap-3">
-            <Link href="/" className="bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-6 py-2.5 rounded-full text-sm transition-colors">Sign in</Link>
-            <Link href="/register" className="border border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 font-semibold px-6 py-2.5 rounded-full text-sm transition-colors">Create account</Link>
+            <Link href="/" className="bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-6 py-2.5 rounded-full text-sm transition-colors">{t.common.signIn}</Link>
+            <Link href="/register" className="border border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 font-semibold px-6 py-2.5 rounded-full text-sm transition-colors">{t.common.createAccount}</Link>
           </div>
         </div>
       )}

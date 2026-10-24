@@ -18,6 +18,7 @@ export const de = {
   error: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
   lessonCount: (n: number) => (n === 1 ? "1 Lektion" : `${n} Lektionen`),
   language: "Sprache",
+  siteDescription: "Online-Kurse",
 };
 
 export const en: Translation<typeof de> = {
@@ -38,4 +39,5 @@ export const en: Translation<typeof de> = {
   error: "Something went wrong. Please try again.",
   lessonCount: (n: number) => (n === 1 ? "1 lesson" : `${n} lessons`),
   language: "Language",
+  siteDescription: "Online courses",
 };

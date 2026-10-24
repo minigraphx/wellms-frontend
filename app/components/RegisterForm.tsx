@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { isEmailNotConfirmed } from "./authErrors";
+import { useT } from "../i18n/I18nProvider";
 
 export function RegisterForm() {
   const { register, login } = useContext(EscolaLMSContext);
@@ -14,6 +15,7 @@ export function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [confirmationSentTo, setConfirmationSentTo] = useState("");
   const id = useId();
+  const t = useT();
 
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -23,11 +25,11 @@ export function RegisterForm() {
     e.preventDefault();
     setError("");
     if (form.password !== form.password_confirmation) {
-      setError("Passwords do not match.");
+      setError(t.auth.passwordsDontMatch);
       return;
     }
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t.auth.passwordTooShort);
       return;
     }
     setLoading(true);
@@ -52,10 +54,10 @@ export function RegisterForm() {
         }
       } else {
         const msg = (res as any)?.data?.message || (res as any)?.data?.errors?.email?.[0];
-        setError(msg || "Registration failed. Please try again.");
+        setError(msg || t.auth.registrationFailed);
       }
     } catch {
-      setError("Registration failed. Please try again.");
+      setError(t.auth.registrationFailed);
     } finally {
       setLoading(false);
     }
@@ -64,12 +66,13 @@ export function RegisterForm() {
   if (confirmationSentTo) {
     return (
       <div className="space-y-3 text-center" role="status">
-        <h2 className="text-lg font-semibold text-[#04323e]">Account created. Check your inbox</h2>
+        <h2 className="text-lg font-semibold text-[#04323e]">{t.auth.accountCreated}</h2>
         <p className="text-sm text-[#555555]">
-          We sent a confirmation link to <strong>{confirmationSentTo}</strong>. Click it to confirm your email
-          address, then sign in.
+          {t.auth.confirmationSentPrefix}
+          <strong>{confirmationSentTo}</strong>
+          {t.auth.confirmationSentSuffix}
         </p>
-        <Link href="/" className="inline-block text-sm text-[#1abc9c] hover:underline font-medium">Go to sign in</Link>
+        <Link href="/" className="inline-block text-sm text-[#1abc9c] hover:underline font-medium">{t.auth.goToSignIn}</Link>
       </div>
     );
   }
@@ -78,7 +81,7 @@ export function RegisterForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor={`${id}-first_name`} className="block text-sm font-medium text-[#04323e] mb-1">First name</label>
+          <label htmlFor={`${id}-first_name`} className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.firstName}</label>
           <input
             type="text"
             id={`${id}-first_name`}
@@ -89,7 +92,7 @@ export function RegisterForm() {
           />
         </div>
         <div>
-          <label htmlFor={`${id}-last_name`} className="block text-sm font-medium text-[#04323e] mb-1">Last name</label>
+          <label htmlFor={`${id}-last_name`} className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.lastName}</label>
           <input
             type="text"
             id={`${id}-last_name`}
@@ -101,7 +104,7 @@ export function RegisterForm() {
         </div>
       </div>
       <div>
-        <label htmlFor={`${id}-email`} className="block text-sm font-medium text-[#04323e] mb-1">Email</label>
+        <label htmlFor={`${id}-email`} className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.email}</label>
         <input
           type="email"
           id={`${id}-email`}
@@ -112,7 +115,7 @@ export function RegisterForm() {
         />
       </div>
       <div>
-        <label htmlFor={`${id}-password`} className="block text-sm font-medium text-[#04323e] mb-1">Password</label>
+        <label htmlFor={`${id}-password`} className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.password}</label>
         <input
           type="password"
           id={`${id}-password`}
@@ -123,7 +126,7 @@ export function RegisterForm() {
         />
       </div>
       <div>
-        <label htmlFor={`${id}-password_confirmation`} className="block text-sm font-medium text-[#04323e] mb-1">Confirm password</label>
+        <label htmlFor={`${id}-password_confirmation`} className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.confirmPassword}</label>
         <input
           type="password"
           id={`${id}-password_confirmation`}
@@ -139,11 +142,11 @@ export function RegisterForm() {
         disabled={loading}
         className="w-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold py-2.5 rounded-full transition-colors"
       >
-        {loading ? "Creating account…" : "Create account"}
+        {loading ? t.auth.creatingAccount : t.common.createAccount}
       </button>
       <p className="text-center text-sm text-gray-400">
-        Already have an account?{" "}
-        <Link href="/" className="text-[#1abc9c] hover:underline font-medium">Sign in</Link>
+        {t.auth.haveAccount}{" "}
+        <Link href="/" className="text-[#1abc9c] hover:underline font-medium">{t.common.signIn}</Link>
       </p>
     </form>
   );

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import CoursePageClient from "./CoursePageClient";
 import { fetchPublicCourse } from "../../lib/publicApi";
+import { getT } from "../../i18n/server";
 import {
   SITE_URL,
   breadcrumbJsonLd,
@@ -45,6 +46,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
   if (course && id !== courseSlug(course)) permanentRedirect(coursePath(course));
 
   const url = course ? `${SITE_URL}${coursePath(course)}` : "";
+  const t = await getT();
   return (
     <>
       {course && (
@@ -54,7 +56,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
             __html: jsonLdScript([
               courseJsonLd(course, url),
               breadcrumbJsonLd([
-                { name: "Courses", url: `${SITE_URL}/` },
+                { name: t.common.courses, url: `${SITE_URL}/` },
                 { name: course.title, url },
               ]),
             ]),

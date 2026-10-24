@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useT } from "../i18n/I18nProvider";
 
 const GOAL_KEY = "lernziel_goal";
 const WEEK_KEY = "lernziel_week";
@@ -29,6 +30,7 @@ export function LearningGoalWidget() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("5");
   const [mounted, setMounted] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     setMounted(true);
@@ -58,13 +60,13 @@ export function LearningGoalWidget() {
   return (
     <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-semibold text-[#04323e] text-sm">Wochenziel</h2>
+        <h2 className="font-semibold text-[#04323e] text-sm">{t.learner.goal.weeklyGoal}</h2>
         {!editing && (
           <button
             onClick={() => setEditing(true)}
             className="text-xs text-gray-400 hover:text-[#1abc9c] transition-colors"
           >
-            Anpassen
+            {t.learner.goal.adjust}
           </button>
         )}
       </div>
@@ -81,17 +83,17 @@ export function LearningGoalWidget() {
             className="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:border-[#1abc9c]"
             autoFocus
           />
-          <span className="text-sm text-gray-500">Lektionen / Woche</span>
+          <span className="text-sm text-gray-500">{t.learner.goal.lessonsPerWeek}</span>
           <button
             onClick={saveGoal}
             className="ml-auto text-xs bg-[#1abc9c] text-white px-3 py-1 rounded-full hover:bg-[#15a288] transition-colors"
           >
-            Speichern
+            {t.common.save}
           </button>
         </div>
       ) : (
         <p className="text-xs text-gray-400 mb-3">
-          {done ? "Ziel erreicht! 🎉" : `${count} von ${goal} Lektionen diese Woche`}
+          {done ? t.learner.goal.reached : t.learner.goal.progress(count, goal)}
         </p>
       )}
 

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Nav } from "../components/Nav";
+import { useT } from "../i18n/I18nProvider";
+import type { Messages } from "../i18n/messages";
 import { loadCards, saveCards } from "./storage";
 import type { Flashcard } from "./storage";
 
@@ -23,7 +25,8 @@ function sm2(card: Flashcard, quality: number): Flashcard {
   return { ...card, easeFactor, interval, repetitions, nextReview };
 }
 
-const QUALITY_LABELS = ["Again", "Hard", "Okay", "Good", "Easy"];
+// Index = SM-2 quality (0–4); labels come from learner.flashcards.quality.
+const QUALITY_KEYS: (keyof Messages["learner"]["flashcards"]["quality"])[] = ["again", "hard", "okay", "good", "easy"];
 const QUALITY_STYLES = [
   "border-red-300 text-red-600 hover:bg-red-50",
   "border-orange-300 text-orange-600 hover:bg-orange-50",
@@ -34,6 +37,8 @@ const QUALITY_STYLES = [
 
 export default function FlashcardsPage() {
   const router = useRouter();
+  const t = useT();
+  const f = t.learner.flashcards;
   const [mounted, setMounted] = useState(false);
   const [cards, setCards] = useState<Flashcard[]>([]);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -71,17 +76,17 @@ export default function FlashcardsPage() {
       <Nav />
       <main className="max-w-2xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-[#04323e]">Flashcards</h1>
-          <span className="text-sm text-gray-400">{cards.length} Karten gesamt</span>
+          <h1 className="text-3xl font-bold text-[#04323e]">{t.nav.flashcards}</h1>
+          <span className="text-sm text-gray-400">{f.totalCards(cards.length)}</span>
         </div>
 
         {cards.length === 0 && (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">🃏</p>
-            <p className="text-[#555555] mb-2">Noch keine Flashcards erstellt.</p>
-            <p className="text-sm text-gray-400 mb-6">Öffne eine Lektion und klicke auf „Flashcards generieren".</p>
+            <p className="text-[#555555] mb-2">{f.empty}</p>
+            <p className="text-sm text-gray-400 mb-6">{f.emptyHint}</p>
             <Link href="/" className="inline-block bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-6 py-2.5 rounded-full transition-colors text-sm">
-              Kurse durchsuchen
+              {f.browseCourses}
             </Link>
           </div>
         )}
@@ -89,44 +94,44 @@ export default function FlashcardsPage() {
         {cards.length > 0 && totalDue === 0 && (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">✅</p>
-            <p className="text-lg font-semibold text-[#04323e] mb-2">Alle Karten für heute gelernt!</p>
-            <p className="text-sm text-gray-400">Komm morgen wieder, um fällige Karten zu wiederholen.</p>
+            <p className="text-lg font-semibold text-[#04323e] mb-2">{f.allDone}</p>
+            <p className="text-sm text-gray-400">{f.allDoneHint}</p>
           </div>
         )}
 
         {current && remaining > 0 && (
           <div className="space-y-6">
             <div className="flex items-center justify-between text-sm text-gray-400">
-              <span>Thema: {current.topicTitle}</span>
-              <span>{remaining} noch fällig</span>
+              <span>{f.topic(current.topicTitle)}</span>
+              <span>{f.remaining(remaining)}</span>
             </div>
 
             <div
               className="bg-white border border-gray-100 rounded-2xl shadow-sm p-8 min-h-48 flex flex-col justify-between cursor-pointer select-none"
               onClick={() => setShowAnswer((v) => !v)}
             >
-              <p className="text-sm font-semibold text-[#1abc9c] uppercase tracking-wide mb-3">Frage</p>
+              <p className="text-sm font-semibold text-[#1abc9c] uppercase tracking-wide mb-3">{f.question}</p>
               <p className="text-lg text-[#04323e] leading-relaxed">{current.question}</p>
 
               {showAnswer ? (
                 <div className="mt-6 pt-6 border-t border-gray-100">
-                  <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Antwort</p>
+                  <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">{f.answer}</p>
                   <p className="text-[#555555] leading-relaxed whitespace-pre-line">{current.answer}</p>
                 </div>
               ) : (
-                <p className="mt-6 text-sm text-gray-300 text-center">Klicken zum Aufdecken</p>
+                <p className="mt-6 text-sm text-gray-300 text-center">{f.clickToReveal}</p>
               )}
             </div>
 
             {showAnswer && (
               <div className="grid grid-cols-5 gap-2">
-                {QUALITY_LABELS.map((label, q) => (
+                {QUALITY_KEYS.map((key, q) => (
                   <button
                     key={q}
                     onClick={() => handleRate(q)}
                     className={`py-2 rounded-xl border text-xs font-semibold transition-colors ${QUALITY_STYLES[q]}`}
                   >
-                    {label}
+                    {f.quality[key]}
                   </button>
                 ))}
               </div>
@@ -137,7 +142,7 @@ export default function FlashcardsPage() {
                 onClick={() => setShowAnswer(true)}
                 className="w-full bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold py-3 rounded-full transition-colors"
               >
-                Antwort zeigen
+                {f.showAnswer}
               </button>
             )}
           </div>
@@ -145,7 +150,7 @@ export default function FlashcardsPage() {
 
         {sessionDone > 0 && remaining === 0 && (
           <div className="mt-8 text-center">
-            <p className="text-[#1abc9c] font-semibold">Session abgeschlossen — {sessionDone} Karten wiederholt!</p>
+            <p className="text-[#1abc9c] font-semibold">{f.sessionDone(sessionDone)}</p>
           </div>
         )}
       </main>

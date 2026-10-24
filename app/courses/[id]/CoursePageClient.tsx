@@ -7,6 +7,7 @@ import { CourseCurriculum } from "../../components/CourseCurriculum";
 import { Markdown } from "../../components/Markdown";
 import { useToast } from "../../components/Toast";
 import { useViewer } from "../../components/useViewer";
+import { useFormat, useT } from "../../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -39,6 +40,8 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
     fetchMyProducts,
   } = useContext(EscolaLMSContext);
   const { toast } = useToast();
+  const t = useT();
+  const { date } = useFormat();
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState(false);
   const [enrollError, setEnrollError] = useState("");
@@ -126,14 +129,14 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
       if (res.success || msg.toLowerCase().includes("already")) {
         await fetchMyCourses();
         await fetchCourseProgress(courseId);
-        toast("You're enrolled! Start learning below.");
+        toast(t.course.enrolled);
       } else {
-        setEnrollError("Enrollment failed. Please try again.");
-        toast("Enrollment failed. Please try again.", "error");
+        setEnrollError(t.course.enrollFailed);
+        toast(t.course.enrollFailed, "error");
       }
     } catch {
-      setEnrollError("Enrollment failed. Please try again.");
-      toast("Enrollment failed. Please try again.", "error");
+      setEnrollError(t.course.enrollFailed);
+      toast(t.course.enrollFailed, "error");
     } finally {
       setEnrolling(false);
     }
@@ -142,18 +145,18 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
   const loggedIn = mounted && !!user.value;
 
   if (loading && !course) {
-    return <div className="max-w-4xl mx-auto px-4 py-12 text-[#555555]">Loading...</div>;
+    return <div className="max-w-4xl mx-auto px-4 py-12 text-[#555555]">{t.common.loading}</div>;
   }
 
   if (!course) {
-    return <div className="max-w-4xl mx-auto px-4 py-12 text-[#555555]">Course not found.</div>;
+    return <div className="max-w-4xl mx-auto px-4 py-12 text-[#555555]">{t.course.notFound}</div>;
   }
 
   function renderCTA() {
     if (!loggedIn) {
       return (
         <p className="text-sm text-gray-400 text-center">
-          <Link href="/" className="text-[#1abc9c] hover:underline font-medium">Sign in</Link> to enroll
+          <Link href="/" className="text-[#1abc9c] hover:underline font-medium">{t.course.signInLink}</Link>{t.course.toEnroll}
         </p>
       );
     }
@@ -165,7 +168,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
             disabled={enrolling}
             className="block w-full text-center bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold py-3 rounded-full transition-colors"
           >
-            {enrolling ? "Enrolling…" : "Enroll now — it's free"}
+            {enrolling ? t.course.enrolling : t.course.enrollNow}
           </button>
           {enrollError && <p className="text-sm text-red-600 text-center mt-2">{enrollError}</p>}
         </>
@@ -177,7 +180,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
           href={`/courses/${courseId}/complete`}
           className="block w-full text-center border-2 border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 font-semibold py-3 rounded-full transition-colors"
         >
-          View certificate
+          {t.course.viewCertificate}
         </Link>
       );
     }
@@ -186,7 +189,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
         href={`/courses/${courseId}/topics/${resumeTopic?.id ?? firstTopic?.id}`}
         className="block w-full text-center bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold py-3 rounded-full transition-colors"
       >
-        {progressPct > 0 ? "Resume course" : "Start learning"}
+        {progressPct > 0 ? t.course.resumeCourse : t.course.startLearning}
       </Link>
     );
   }
@@ -194,7 +197,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">
       <nav className="text-sm text-gray-400 mb-6">
-        <Link href="/" className="hover:text-[#1abc9c] transition-colors">Courses</Link>
+        <Link href="/" className="hover:text-[#1abc9c] transition-colors">{t.common.courses}</Link>
         <span className="mx-2">›</span>
         <span className="text-[#04323e]">{course.title}</span>
       </nav>
@@ -209,7 +212,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
               <span className="text-xs font-medium bg-[#1abc9c]/10 text-[#1abc9c] px-3 py-1 rounded-full">{course.level}</span>
             )}
             {course.topic_count != null && (
-              <span className="text-xs font-medium bg-gray-100 text-gray-500 px-3 py-1 rounded-full">{course.topic_count} lessons</span>
+              <span className="text-xs font-medium bg-gray-100 text-gray-500 px-3 py-1 rounded-full">{t.common.lessonCount(course.topic_count)}</span>
             )}
             {course.duration && (
               <span className="text-xs font-medium bg-gray-100 text-gray-500 px-3 py-1 rounded-full">{course.duration}</span>
@@ -218,7 +221,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
 
           {course.author && (
             <p className="text-sm text-gray-400">
-              By{" "}
+              {t.course.by}{" "}
               <Link href={`/instructors/${course.author.id}`} className="font-medium text-[#555555] hover:text-[#1abc9c] transition-colors">
                 {course.author.first_name} {course.author.last_name}
               </Link>
@@ -234,7 +237,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
           {isEnrolled && allTopics.length > 0 && (
             <div>
               <div className="flex justify-between text-xs text-gray-400 mb-1">
-                <span>Progress</span>
+                <span>{t.course.progress}</span>
                 <span>{progressPct}%</span>
               </div>
               <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -245,7 +248,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
 
           {accessExpiry && isEnrolled && (
             <p className="text-xs text-gray-400 text-center">
-              Access expires {new Date(accessExpiry).toLocaleDateString()}
+              {t.course.accessExpires(date(accessExpiry))}
             </p>
           )}
 
@@ -261,7 +264,7 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.882v6.236a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
               </svg>
-              Join live session
+              {t.course.joinLiveSession}
             </a>
           )}
         </div>
@@ -269,14 +272,14 @@ export default function CoursePageClient({ courseId, initialCourse }: CoursePage
 
       {course.description && (
         <div className="mb-10">
-          <h2 className="text-xl font-semibold text-[#04323e] mb-3">About this course</h2>
+          <h2 className="text-xl font-semibold text-[#04323e] mb-3">{t.course.about}</h2>
           <Markdown className="prose max-w-none text-[#555555]" content={course.description} />
         </div>
       )}
 
       {course.lessons && course.lessons.length > 0 && (
         <div>
-          <h2 className="text-xl font-semibold text-[#04323e] mb-4">Curriculum</h2>
+          <h2 className="text-xl font-semibold text-[#04323e] mb-4">{t.course.curriculum}</h2>
           <CourseCurriculum lessons={course.lessons} courseId={courseId} isEnrolled={isEnrolled} />
         </div>
       )}

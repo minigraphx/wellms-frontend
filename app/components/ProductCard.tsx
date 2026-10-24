@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { API } from "@escolalms/sdk/lib";
+import { useFormat, useT } from "../i18n/I18nProvider";
 
 interface ProductCardProps {
   product: API.Product;
@@ -9,11 +10,11 @@ interface ProductCardProps {
   cartLoading?: boolean;
 }
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString("en", { style: "currency", currency: "EUR" });
-}
+const CURRENCY = "EUR";
 
 export function ProductCard({ product, onAddToCart, cartLoading }: ProductCardProps) {
+  const t = useT();
+  const { currency } = useFormat();
   const courseCount = product.productables?.length ?? 0;
   const isSubscription = !!product.subscription_period;
   const isFree = product.gross_price === 0;
@@ -34,17 +35,17 @@ export function ProductCard({ product, onAddToCart, cartLoading }: ProductCardPr
         <div className="flex gap-2 mb-2 flex-wrap">
           {product.owned && (
             <span className="text-xs font-medium bg-[#1abc9c]/10 text-[#1abc9c] px-2 py-0.5 rounded-full">
-              Owned
+              {t.shop.owned}
             </span>
           )}
           {isSubscription && (
             <span className="text-xs font-medium bg-[#04323e]/10 text-[#04323e] px-2 py-0.5 rounded-full">
-              Subscription
+              {t.shop.subscription}
             </span>
           )}
           {courseCount > 1 && (
             <span className="text-xs font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-              Bundle · {courseCount} courses
+              {t.shop.bundle(courseCount)}
             </span>
           )}
           {product.tags?.map((tag) => (
@@ -61,10 +62,10 @@ export function ProductCard({ product, onAddToCart, cartLoading }: ProductCardPr
         <div className="mt-auto pt-4 flex items-center justify-between gap-3">
           <p className="text-lg font-bold text-[#04323e]">
             {isFree ? (
-              <span className="text-[#1abc9c]">Free</span>
+              <span className="text-[#1abc9c]">{t.shop.free}</span>
             ) : (
               <>
-                {formatPrice(product.gross_price)}
+                {currency(product.gross_price / 100, CURRENCY)}
                 {isSubscription && (
                   <span className="text-xs font-normal text-gray-400 ml-1">
                     / {product.subscription_period}
@@ -80,7 +81,7 @@ export function ProductCard({ product, onAddToCart, cartLoading }: ProductCardPr
               disabled={cartLoading}
               className="text-sm font-semibold bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white px-4 py-2 rounded-full transition-colors shrink-0"
             >
-              {cartLoading ? "Adding…" : "Add to cart"}
+              {cartLoading ? t.shop.adding : t.shop.addToCart}
             </button>
           )}
 
@@ -89,7 +90,7 @@ export function ProductCard({ product, onAddToCart, cartLoading }: ProductCardPr
               href={`/shop/${product.id}`}
               className="text-sm font-semibold border border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 px-4 py-2 rounded-full transition-colors shrink-0"
             >
-              View
+              {t.shop.view}
             </Link>
           )}
         </div>

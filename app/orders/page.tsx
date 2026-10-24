@@ -6,23 +6,18 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
 import { useToast } from "../components/Toast";
+import { useFormat, useT } from "../i18n/I18nProvider";
+import { orderStatusOf, type OrderStatus } from "../i18n/messages/shop";
 import type { API } from "@escolalms/sdk/lib";
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString("en", { style: "currency", currency: "EUR" });
-}
+const CURRENCY = "EUR";
+const ORDER_DATE: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" };
 
-function formatDate(str: string | null): string {
-  if (!str) return "—";
-  return new Date(str).toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" });
-}
-
-function statusLabel(status: string | number): { label: string; color: string } {
-  const s = String(status).toLowerCase();
-  if (s === "paid" || s === "1") return { label: "Paid", color: "text-[#1abc9c] bg-[#1abc9c]/10" };
-  if (s === "cancelled" || s === "3") return { label: "Cancelled", color: "text-red-500 bg-red-50" };
-  return { label: "Pending", color: "text-[#b8850a] bg-[#f2c94c]/20" };
-}
+const STATUS_COLORS: Record<OrderStatus, string> = {
+  paid: "text-[#1abc9c] bg-[#1abc9c]/10",
+  cancelled: "text-red-500 bg-red-50",
+  pending: "text-[#b8850a] bg-[#f2c94c]/20",
+};
 
 // useSearchParams() needs a Suspense boundary, or prerendering fails at build time.
 export default function OrdersPage() {
@@ -38,6 +33,10 @@ function OrdersContent() {
   const searchParams = useSearchParams();
   const { fetchOrders, fetchOrderInvoice, user } = useContext(EscolaLMSContext);
   const { toast } = useToast();
+  const t = useT();
+  const { currency, date } = useFormat();
+  const formatPrice = (cents: number) => currency(cents / 100, CURRENCY);
+  const formatDate = (str: string | null) => (str ? date(str, ORDER_DATE) : "—");
 
   const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<API.Order[]>([]);
@@ -65,7 +64,7 @@ function OrdersContent() {
 
   useEffect(() => {
     if (searchParams.get("success") === "1") {
-      toast("Payment successful! Your order is confirmed.", "success");
+      toast(t.shop.paymentSuccess, "success");
     }
   }, []);
 
@@ -81,12 +80,12 @@ function OrdersContent() {
         a.click();
         URL.revokeObjectURL(url);
       } catch {
-        toast("Failed to download invoice.", "error");
+        toast(t.shop.invoiceDownloadFailed, "error");
       } finally {
         setDownloadingId(null);
       }
     },
-    [fetchOrderInvoice, toast]
+    [fetchOrderInvoice, toast, t]
   );
 
   if (!mounted || !user.value) return null;
@@ -95,27 +94,29 @@ function OrdersContent() {
     <>
       <Nav />
       <main className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-[#04323e] mb-8">Order history</h1>
+      <h1 className="text-3xl font-bold text-[#04323e] mb-8">{t.shop.orderHistory}</h1>
 
-      {loading && <p className="text-gray-500">Loading…</p>}
+      {loading && <p className="text-gray-500">{t.common.loading}</p>}
 
       {!loading && orders.length === 0 && (
         <div className="text-center py-20">
           <p className="text-4xl mb-4">📦</p>
-          <p className="text-gray-400 text-lg mb-4">No orders yet.</p>
-          <Link href="/shop" className="text-[#1abc9c] hover:underline">Browse the shop</Link>
+          <p className="text-gray-400 text-lg mb-4">{t.shop.noOrders}</p>
+          <Link href="/shop" className="text-[#1abc9c] hover:underline">{t.shop.browseShop}</Link>
         </div>
       )}
 
       <div className="space-y-4">
         {orders.map((order) => {
-          const { label, color } = statusLabel(order.status);
+          const status = orderStatusOf(order.status);
+          const label = t.shop.orderStatus[status];
+          const color = STATUS_COLORS[status];
           return (
             <div key={order.id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="font-semibold text-[#04323e]">Order #{order.id}</span>
+                    <span className="font-semibold text-[#04323e]">{t.shop.orderNumber(order.id)}</span>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${color}`}>
                       {label}
                     </span>
@@ -130,7 +131,7 @@ function OrdersContent() {
                     disabled={downloadingId === order.id}
                     className="text-sm font-medium text-[#1abc9c] hover:text-[#15a288] disabled:opacity-50 transition-colors flex items-center gap-1"
                   >
-                    {downloadingId === order.id ? "Downloading…" : "↓ Invoice"}
+                    {downloadingId === order.id ? t.shop.downloading : `↓ ${t.shop.invoice}`}
                   </button>
                 </div>
               </div>
@@ -139,7 +140,7 @@ function OrdersContent() {
                 <ul className="mt-4 space-y-2 border-t border-gray-50 pt-4">
                   {order.items.map((item, i) => (
                     <li key={i} className="flex justify-between text-sm text-[#555555]">
-                      <span>{item.name ?? item.product?.name ?? `Item ${i + 1}`}</span>
+                      <span>{item.name ?? item.product?.name ?? t.shop.item(i + 1)}</span>
                       <span className="font-medium">{formatPrice((item as any).price ?? 0)}</span>
                     </li>
                   ))}

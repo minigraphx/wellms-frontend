@@ -1,4 +1,5 @@
 import { renderToString } from "react-dom/server";
+import { messages } from "../app/i18n/messages";
 
 // What search engines get: the HTML rendered on the server, before any effect or API call.
 
@@ -52,6 +53,7 @@ describe("server-rendered HTML", () => {
     expect(html).toContain("ChatGPT &amp; Co.: Einstiegskurs KI");
     expect(html).toContain('href="/courses/2-chatgpt-co-einstiegskurs-ki"');
     expect(html).not.toContain("Loading...");
+    expect(html).not.toContain(messages.de.common.loading);
   });
 
   it("contains the course title, summary and curriculum", () => {
@@ -62,5 +64,6 @@ describe("server-rendered HTML", () => {
     expect(html).toContain("<strong>KI</strong>");
     expect(html).toContain("1.1 Willkommen");
     expect(html).not.toContain("Loading...");
+    expect(html).not.toContain(messages.de.common.loading);
   });
 });

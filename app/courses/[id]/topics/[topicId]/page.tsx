@@ -19,6 +19,7 @@ import { GenerateFlashcardsButton } from "../../../../components/GenerateFlashca
 import { GuestTopicView } from "../../../../components/GuestTopicView";
 import { useViewer } from "../../../../components/useViewer";
 import { parseCourseId } from "../../../../lib/seo";
+import { useFormat, useT } from "../../../../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -44,8 +45,9 @@ function findParentLesson(lessons: API.Lesson[], topicId: number): API.Lesson | 
 export default function TopicPage() {
   const { id, topicId } = useParams<{ id: string; topicId: string }>();
   const viewer = useViewer();
+  const t = useT();
 
-  if (viewer === "pending") return <div className="max-w-3xl mx-auto px-4 py-12 text-[#555555]">Loading...</div>;
+  if (viewer === "pending") return <div className="max-w-3xl mx-auto px-4 py-12 text-[#555555]">{t.common.loading}</div>;
   // The member view needs the program endpoint (login); guests get free previews only.
   if (viewer === "guest") return <GuestTopicView courseId={parseCourseId(id) ?? 0} topicId={Number(topicId)} />;
   return <MemberTopicPage />;
@@ -57,6 +59,8 @@ function MemberTopicPage() {
   const currentTopicId = Number(topicId);
   const router = useRouter();
   const { toast } = useToast();
+  const t = useT();
+  const { date } = useFormat();
   const [loading, setLoading] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -216,28 +220,28 @@ function MemberTopicPage() {
     }
 
     if (nextTopic) {
-      toast("Lesson complete! Moving to next topic.");
+      toast(t.player.lessonCompleteToast);
       router.push(nextPath);
     } else {
-      toast("Course complete! 🎉", "success");
+      toast(t.player.courseCompleteToast, "success");
       router.push(nextPath);
     }
-  }, [courseId, currentTopicId, nextTopic, topic, sendProgress, fetchCourseProgress, router, toast]);
+  }, [courseId, currentTopicId, nextTopic, topic, sendProgress, fetchCourseProgress, router, toast, t]);
 
   const handleVideoEnded = useCallback(() => {
     if (!isFinished) handleMarkComplete();
   }, [isFinished, handleMarkComplete]);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen text-gray-500">Loading...</div>;
+    return <div className="flex items-center justify-center h-screen text-gray-500">{t.common.loading}</div>;
   }
 
   if (!course) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <p className="text-gray-500">Course not found.</p>
+        <p className="text-gray-500">{t.player.courseNotFound}</p>
         <Link href="/" className="text-[#1abc9c] hover:underline">
-          Back to courses
+          {t.player.backToCourses}
         </Link>
       </div>
     );
@@ -246,9 +250,9 @@ function MemberTopicPage() {
   if (!topic) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <p className="text-gray-500">Topic not found.</p>
+        <p className="text-gray-500">{t.player.topicNotFound}</p>
         <Link href={`/courses/${courseId}`} className="text-[#1abc9c] hover:underline">
-          Back to course
+          {t.player.backToCourse}
         </Link>
       </div>
     );
@@ -284,7 +288,7 @@ function MemberTopicPage() {
             <div className="relative shrink-0 ml-4" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu((v) => !v)}
-                aria-label="Open user menu"
+                aria-label={t.nav.openUserMenu}
                 className="w-8 h-8 rounded-full bg-[#1abc9c]/10 text-[#1abc9c] text-sm font-bold flex items-center justify-center hover:bg-[#1abc9c]/20 transition-colors"
               >
                 {(u as any)?.avatar ? (
@@ -303,20 +307,20 @@ function MemberTopicPage() {
                     onClick={() => setShowUserMenu(false)}
                     className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                   >
-                    My courses
+                    {t.nav.myCourses}
                   </Link>
                   <Link
                     href="/profile"
                     onClick={() => setShowUserMenu(false)}
                     className="block px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#1abc9c] transition-colors"
                   >
-                    Profile
+                    {t.nav.profile}
                   </Link>
                   <button
                     onClick={() => { logout(); setShowUserMenu(false); }}
                     className="w-full text-left px-4 py-2 text-sm text-[#555555] hover:bg-gray-50 hover:text-[#04323e] transition-colors"
                   >
-                    Sign out
+                    {t.common.signOut}
                   </button>
                 </div>
               )}
@@ -332,38 +336,41 @@ function MemberTopicPage() {
             {isLocked ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <div className="text-4xl mb-4">🔒</div>
-                <h2 className="text-xl font-bold text-[#04323e] mb-2">Enroll to unlock this lesson</h2>
-                <p className="text-[#555555] mb-6">This content is only available to enrolled students.</p>
+                <h2 className="text-xl font-bold text-[#04323e] mb-2">{t.player.enrollToUnlock}</h2>
+                <p className="text-[#555555] mb-6">{t.player.enrolledOnly}</p>
                 <Link
                   href={`/courses/${courseId}`}
                   className="inline-block bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-8 py-3 rounded-full transition-colors"
                 >
-                  Go to course page
+                  {t.player.goToCoursePage}
                 </Link>
               </div>
             ) : isDripLocked ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <div className="text-4xl mb-4">🕐</div>
-                <h2 className="text-xl font-bold text-[#04323e] mb-2">Content not yet available</h2>
+                <h2 className="text-xl font-bold text-[#04323e] mb-2">{t.player.notYetAvailable}</h2>
                 <p className="text-[#555555]">
-                  This lesson unlocks on{" "}
+                  {t.player.unlocksOnBefore}
                   <span className="font-semibold">
-                    {new Date((topic as any).active_from).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
-                  </span>.
+                    {date((topic as any).active_from, { month: "long", day: "numeric", year: "numeric" })}
+                  </span>
+                  {t.player.unlocksOnAfter}
                 </p>
               </div>
             ) : isPrerequisiteLocked ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <div className="text-4xl mb-4">🔗</div>
-                <h2 className="text-xl font-bold text-[#04323e] mb-2">Complete the previous lesson first</h2>
+                <h2 className="text-xl font-bold text-[#04323e] mb-2">{t.player.completePreviousFirst}</h2>
                 <p className="text-[#555555] mb-6">
-                  You need to finish <span className="font-semibold">"{prerequisiteTopic!.title}"</span> before accessing this lesson.
+                  {t.player.prerequisiteBefore}
+                  <span className="font-semibold">{t.player.quoted(prerequisiteTopic!.title)}</span>
+                  {t.player.prerequisiteAfter}
                 </p>
                 <Link
                   href={`/courses/${courseId}/topics/${prerequisiteTopic!.id}`}
                   className="inline-block bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-8 py-3 rounded-full transition-colors"
                 >
-                  Go to previous lesson →
+                  {t.player.goToPreviousLesson} →
                 </Link>
               </div>
             ) : (
@@ -375,7 +382,7 @@ function MemberTopicPage() {
                   onPass={() => setQuizPassed(true)}
                 />
                 {topic.topicable_type === TopicType.Video && !isFinished && !videoWatched && (
-                  <p className="mt-3 text-xs text-gray-400 text-center">Watch 90% of the video to mark this lesson complete.</p>
+                  <p className="mt-3 text-xs text-gray-400 text-center">{t.player.watchHint}</p>
                 )}
                 <ExplainDifferentlyButton topicTitle={topic.title} />
               </>
@@ -383,7 +390,7 @@ function MemberTopicPage() {
 
             {topic.resources && topic.resources.length > 0 && (
               <div className="mt-8 border-t border-gray-100 pt-6">
-                <h3 className="font-semibold text-[#04323e] mb-3">Resources</h3>
+                <h3 className="font-semibold text-[#04323e] mb-3">{t.player.resources}</h3>
                 <ul className="space-y-2">
                   {topic.resources.map((r) => (
                     <li key={r.id}>
@@ -431,7 +438,7 @@ function MemberTopicPage() {
                 href={`/courses/${courseId}`}
                 className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors"
               >
-                ← Back to course
+                ← {t.player.backToCourse}
               </Link>
             )}
           </div>
@@ -447,16 +454,16 @@ function MemberTopicPage() {
               }`}
             >
               {summaryLoading
-                ? "Zusammenfassung…"
+                ? t.player.summarizing
                 : isFinished
-                ? "✓ Completed"
+                ? `✓ ${t.player.completed}`
                 : !complianceMet && topic.topicable_type === TopicType.Video
-                ? "Watch 90% to complete"
+                ? t.player.watchToComplete
                 : !complianceMet && topic.topicable_type === TopicType.GiftQuiz
-                ? "Pass the quiz to continue"
+                ? t.player.passQuizToContinue
                 : nextTopic
-                ? "Mark Complete & Continue →"
-                : "Mark as Complete"}
+                ? `${t.player.markCompleteAndContinue} →`
+                : t.player.markComplete}
             </button>
           )}
 
@@ -473,7 +480,7 @@ function MemberTopicPage() {
                 href={`/courses/${courseId}`}
                 className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors"
               >
-                Finish course →
+                {t.player.finishCourse} →
               </Link>
             )}
           </div>
@@ -492,26 +499,26 @@ function MemberTopicPage() {
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
             <div className="flex items-center gap-2">
               <span className="text-xl">✨</span>
-              <h2 className="text-lg font-bold text-[#04323e]">Key Takeaways</h2>
+              <h2 className="text-lg font-bold text-[#04323e]">{t.player.keyTakeaways}</h2>
             </div>
             <div className="text-sm text-[#555555] whitespace-pre-line leading-relaxed">
               {summaryModal.text}
             </div>
-            <p className="text-xs text-gray-400">KI-generierte Zusammenfassung</p>
+            <p className="text-xs text-gray-400">{t.player.aiSummary}</p>
             <button
               onClick={() => {
                 const path = summaryModal.nextPath;
                 setSummaryModal(null);
                 if (nextTopic) {
-                  toast("Lesson complete! Moving to next topic.");
+                  toast(t.player.lessonCompleteToast);
                 } else {
-                  toast("Course complete! 🎉", "success");
+                  toast(t.player.courseCompleteToast, "success");
                 }
                 router.push(path);
               }}
               className="w-full bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold py-2.5 rounded-full transition-colors"
             >
-              {nextTopic ? "Next lesson →" : "Finish course 🎉"}
+              {nextTopic ? `${t.player.nextLesson} →` : `${t.player.finishCourse} 🎉`}
             </button>
           </div>
         </div>

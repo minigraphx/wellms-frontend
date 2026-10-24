@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "../i18n/I18nProvider";
 
 interface Message {
   role: "user" | "assistant";
@@ -18,6 +19,8 @@ export function AiChatWidget({ courseTitle, topicTitle }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const t = useT();
+  const text = t.player.chat;
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,12 +52,12 @@ export function AiChatWidget({ courseTitle, topicTitle }: Props) {
       const data = await res.json();
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.content ?? "Sorry, I couldn't respond." },
+        { role: "assistant", content: data.content ?? text.noResponse },
       ]);
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "An error occurred. Please try again." },
+        { role: "assistant", content: t.common.error },
       ]);
     } finally {
       setLoading(false);
@@ -71,13 +74,13 @@ export function AiChatWidget({ courseTitle, topicTitle }: Props) {
           <div className="flex items-center justify-between px-4 py-3 bg-[#04323e] text-white shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-full bg-[#1abc9c] flex items-center justify-center text-xs font-bold">
-                AI
+                {text.avatar}
               </div>
-              <span className="font-semibold text-sm">Learning Assistant</span>
+              <span className="font-semibold text-sm">{text.title}</span>
             </div>
             <button
               onClick={() => setOpen(false)}
-              aria-label="Close chat"
+              aria-label={text.closeChat}
               className="text-white/70 hover:text-white text-xl leading-none"
             >
               ×
@@ -88,8 +91,8 @@ export function AiChatWidget({ courseTitle, topicTitle }: Props) {
             {messages.length === 0 && (
               <p className="text-xs text-gray-400 text-center mt-6">
                 {topicTitle
-                  ? `Ask me anything about "${topicTitle}"`
-                  : "Ask me anything about this course!"}
+                  ? text.askAboutTopic(topicTitle)
+                  : text.askAboutCourse}
               </p>
             )}
             {messages.map((m, i) => (
@@ -108,7 +111,7 @@ export function AiChatWidget({ courseTitle, topicTitle }: Props) {
             {loading && (
               <div className="flex justify-start">
                 <div className="bg-gray-100 px-3 py-2 rounded-xl rounded-bl-sm text-sm text-gray-400">
-                  Thinking…
+                  {text.thinking}
                 </div>
               </div>
             )}
@@ -120,13 +123,13 @@ export function AiChatWidget({ courseTitle, topicTitle }: Props) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
-              placeholder="Ask a question…"
+              placeholder={text.placeholder}
               className="flex-1 border border-gray-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
             />
             <button
               onClick={send}
               disabled={!input.trim() || loading}
-              aria-label="Send message"
+              aria-label={text.send}
               className="w-9 h-9 rounded-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-40 text-white flex items-center justify-center shrink-0 transition-colors"
             >
               <svg
@@ -149,7 +152,7 @@ export function AiChatWidget({ courseTitle, topicTitle }: Props) {
 
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close learning assistant" : "Open learning assistant"}
+        aria-label={open ? text.closeAssistant : text.openAssistant}
         className="w-14 h-14 rounded-full bg-[#1abc9c] hover:bg-[#15a288] text-white shadow-lg flex items-center justify-center transition-all hover:scale-105"
       >
         {open ? (

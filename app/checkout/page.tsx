@@ -6,13 +6,16 @@ import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
 import { useToast } from "../components/Toast";
+import { useFormat, useT } from "../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 type PaymentMethod = "stripe" | "p24";
 
-function formatPrice(cents: number | string | undefined): string {
+const CURRENCY = "EUR";
+
+function toAmount(cents: number | string | undefined): number {
   const n = typeof cents === "string" ? parseFloat(cents) : (cents ?? 0);
-  return (n / 100).toLocaleString("en", { style: "currency", currency: "EUR" });
+  return n / 100;
 }
 
 export default function CheckoutPage() {
@@ -20,6 +23,9 @@ export default function CheckoutPage() {
   const { cart, fetchCart, payWithStripe, payWithP24, realizeVoucher, removeVoucher, user } =
     useContext(EscolaLMSContext);
   const { toast } = useToast();
+  const t = useT();
+  const { currency } = useFormat();
+  const formatPrice = (cents: number | string | undefined) => currency(toAmount(cents), CURRENCY);
 
   const [mounted, setMounted] = useState(false);
   const [method, setMethod] = useState<PaymentMethod>("stripe");
@@ -70,23 +76,23 @@ export default function CheckoutPage() {
       const res = await realizeVoucher(voucher.trim());
       if ((res as any)?.success) {
         await fetchCart();
-        toast("Voucher applied!");
+        toast(t.shop.voucherApplied);
       } else {
-        toast((res as any)?.data?.message ?? "Invalid voucher.", "error");
+        toast((res as any)?.data?.message ?? t.shop.invalidVoucher, "error");
       }
     } catch {
-      toast("Invalid voucher.", "error");
+      toast(t.shop.invalidVoucher, "error");
     } finally {
       setVoucherLoading(false);
     }
-  }, [voucher, realizeVoucher, fetchCart, toast]);
+  }, [voucher, realizeVoucher, fetchCart, toast, t]);
 
   const handleRemoveVoucher = useCallback(async () => {
     await removeVoucher();
     await fetchCart();
     setVoucher("");
-    toast("Voucher removed.");
-  }, [removeVoucher, fetchCart, toast]);
+    toast(t.shop.voucherRemoved);
+  }, [removeVoucher, fetchCart, toast, t]);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -102,11 +108,11 @@ export default function CheckoutPage() {
         }
         // Stripe will redirect; P24 may redirect or resolve
       } catch (err: any) {
-        toast(err?.message ?? "Payment failed. Please try again.", "error");
+        toast(err?.message ?? t.shop.paymentFailed, "error");
         setSubmitting(false);
       }
     },
-    [items, method, billing, payWithStripe, payWithP24, toast]
+    [items, method, billing, payWithStripe, payWithP24, toast, t]
   );
 
   if (!mounted) return null;
@@ -119,8 +125,8 @@ export default function CheckoutPage() {
         <Nav />
         <main className="max-w-2xl mx-auto px-4 py-24 text-center">
           <p className="text-4xl mb-4">🛒</p>
-          <h1 className="text-2xl font-bold text-[#04323e] mb-3">Your cart is empty</h1>
-          <Link href="/shop" className="text-[#1abc9c] hover:underline">Browse the shop</Link>
+          <h1 className="text-2xl font-bold text-[#04323e] mb-3">{t.shop.cartEmptyTitle}</h1>
+          <Link href="/shop" className="text-[#1abc9c] hover:underline">{t.shop.browseShop}</Link>
         </main>
       </>
     );
@@ -135,19 +141,19 @@ export default function CheckoutPage() {
       <Nav />
       <main className="max-w-4xl mx-auto px-4 py-12">
       <nav className="text-sm text-gray-400 mb-6">
-        <Link href="/shop" className="hover:text-[#1abc9c] transition-colors">Shop</Link>
+        <Link href="/shop" className="hover:text-[#1abc9c] transition-colors">{t.nav.shop}</Link>
         <span className="mx-2">›</span>
-        <span className="text-[#04323e]">Checkout</span>
+        <span className="text-[#04323e]">{t.shop.checkout}</span>
       </nav>
 
-      <h1 className="text-3xl font-bold text-[#04323e] mb-8">Checkout</h1>
+      <h1 className="text-3xl font-bold text-[#04323e] mb-8">{t.shop.checkout}</h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left: payment & billing */}
         <div className="md:col-span-2 space-y-6">
           {/* Payment method */}
           <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#04323e] mb-4">Payment method</h2>
+            <h2 className="text-lg font-semibold text-[#04323e] mb-4">{t.shop.paymentMethod}</h2>
             <div className="flex gap-3">
               <label className={`flex items-center gap-3 flex-1 border rounded-xl px-4 py-3 cursor-pointer transition-colors ${method === "stripe" ? "border-[#1abc9c] bg-[#1abc9c]/5" : "border-gray-200"}`}>
                 <input
@@ -158,7 +164,7 @@ export default function CheckoutPage() {
                   onChange={() => setMethod("stripe")}
                   className="accent-[#1abc9c]"
                 />
-                <span className="text-sm font-medium text-[#04323e]">Credit / Debit card (Stripe)</span>
+                <span className="text-sm font-medium text-[#04323e]">{t.shop.card}</span>
               </label>
               <label className={`flex items-center gap-3 flex-1 border rounded-xl px-4 py-3 cursor-pointer transition-colors ${method === "p24" ? "border-[#1abc9c] bg-[#1abc9c]/5" : "border-gray-200"}`}>
                 <input
@@ -176,10 +182,10 @@ export default function CheckoutPage() {
 
           {/* Billing details (required for P24, optional for Stripe) */}
           <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#04323e] mb-4">Billing details</h2>
+            <h2 className="text-lg font-semibold text-[#04323e] mb-4">{t.shop.billingDetails}</h2>
             <div className="space-y-4">
               <div>
-                <label className={labelClass}>Email {method === "p24" && <span className="text-red-500">*</span>}</label>
+                <label className={labelClass}>{t.shop.email} {method === "p24" && <span className="text-red-500">*</span>}</label>
                 <input
                   type="email"
                   value={billing.client_email}
@@ -190,7 +196,7 @@ export default function CheckoutPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={labelClass}>Full name</label>
+                  <label className={labelClass}>{t.shop.fullName}</label>
                   <input
                     type="text"
                     value={billing.client_name}
@@ -199,7 +205,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Company (optional)</label>
+                  <label className={labelClass}>{t.shop.companyOptional}</label>
                   <input
                     type="text"
                     value={billing.client_company}
@@ -209,7 +215,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
               <div>
-                <label className={labelClass}>Tax ID (optional)</label>
+                <label className={labelClass}>{t.shop.taxIdOptional}</label>
                 <input
                   type="text"
                   value={billing.client_taxid}
@@ -219,7 +225,7 @@ export default function CheckoutPage() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
-                  <label className={labelClass}>Street</label>
+                  <label className={labelClass}>{t.shop.street}</label>
                   <input
                     type="text"
                     value={billing.client_street}
@@ -228,7 +234,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Number</label>
+                  <label className={labelClass}>{t.shop.streetNumber}</label>
                   <input
                     type="text"
                     value={billing.client_street_number}
@@ -239,7 +245,7 @@ export default function CheckoutPage() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className={labelClass}>Postal code</label>
+                  <label className={labelClass}>{t.shop.postalCode}</label>
                   <input
                     type="text"
                     value={billing.client_postal}
@@ -248,7 +254,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>City</label>
+                  <label className={labelClass}>{t.shop.city}</label>
                   <input
                     type="text"
                     value={billing.client_city}
@@ -257,7 +263,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Country</label>
+                  <label className={labelClass}>{t.shop.country}</label>
                   <input
                     type="text"
                     value={billing.client_country}
@@ -273,11 +279,11 @@ export default function CheckoutPage() {
         {/* Right: order summary */}
         <aside className="space-y-4">
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm space-y-4">
-            <h2 className="text-lg font-semibold text-[#04323e]">Order summary</h2>
+            <h2 className="text-lg font-semibold text-[#04323e]">{t.shop.orderSummary}</h2>
 
             <ul className="space-y-3">
               {items.map((item, i) => {
-                const name = item.product?.name ?? `Item ${i + 1}`;
+                const name = item.product?.name ?? t.shop.item(i + 1);
                 const price = item.total_with_tax ?? (item as any).price ?? 0;
                 return (
                   <li key={i} className="flex justify-between text-sm text-[#555555]">
@@ -291,13 +297,13 @@ export default function CheckoutPage() {
             {/* Voucher */}
             {cartData?.coupon ? (
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#1abc9c]">Coupon: {cartData.coupon}</span>
+                <span className="text-[#1abc9c]">{t.shop.coupon(cartData.coupon)}</span>
                 <button
                   type="button"
                   onClick={handleRemoveVoucher}
                   className="text-xs text-gray-400 hover:text-red-400 transition-colors"
                 >
-                  Remove
+                  {t.shop.remove}
                 </button>
               </div>
             ) : (
@@ -306,7 +312,7 @@ export default function CheckoutPage() {
                   type="text"
                   value={voucher}
                   onChange={(e) => setVoucher(e.target.value)}
-                  placeholder="Voucher code"
+                  placeholder={t.shop.voucherCode}
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
                 />
                 <button
@@ -315,13 +321,13 @@ export default function CheckoutPage() {
                   disabled={voucherLoading || !voucher.trim()}
                   className="text-sm font-semibold text-[#1abc9c] hover:text-[#15a288] disabled:opacity-40 transition-colors"
                 >
-                  Apply
+                  {t.shop.apply}
                 </button>
               </div>
             )}
 
             <div className="border-t border-gray-100 pt-3 flex justify-between font-semibold text-[#04323e]">
-              <span>Total</span>
+              <span>{t.shop.total}</span>
               <span>{formatPrice(total)}</span>
             </div>
 
@@ -330,11 +336,11 @@ export default function CheckoutPage() {
               disabled={submitting}
               className="w-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold py-3 rounded-full transition-colors"
             >
-              {submitting ? "Processing…" : `Pay ${formatPrice(total)}`}
+              {submitting ? t.shop.processing : t.shop.pay(formatPrice(total))}
             </button>
 
             <p className="text-xs text-gray-400 text-center">
-              By completing your purchase you agree to our Terms of Service.
+              {t.shop.terms}
             </p>
           </div>
         </aside>

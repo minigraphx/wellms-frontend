@@ -2,6 +2,8 @@
 
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { useFormat, useT } from "../i18n/I18nProvider";
+import type { Messages } from "../i18n/messages";
 
 type SDKNotification = {
   id: string;
@@ -15,12 +17,12 @@ type SDKNotification = {
   };
 };
 
-function notificationLabel(n: SDKNotification): string {
-  if (n.data?.course?.title) return `Course update: ${n.data.course.title}`;
-  if (n.data?.order?.id) return `Order #${n.data.order.id} update`;
+function notificationLabel(n: SDKNotification, t: Messages["learner"]["notifications"]): string {
+  if (n.data?.course?.title) return t.courseUpdate(n.data.course.title);
+  if (n.data?.order?.id) return t.orderUpdate(n.data.order.id);
   const msg = n.data?.notification?.sections?.find((s) => s.key === "message")?.value;
   if (msg) return msg;
-  return n.event?.split("\\").pop() ?? "New notification";
+  return n.event?.split("\\").pop() ?? t.fallback;
 }
 
 export function NotificationBell() {
@@ -28,6 +30,8 @@ export function NotificationBell() {
   const { user, fetchNotifications, readNotify, readAllNotifications, notifications } = ctx;
 
   const [open, setOpen] = useState(false);
+  const t = useT();
+  const { date } = useFormat();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,7 +62,7 @@ export function NotificationBell() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={`Benachrichtigungen${unread > 0 ? `, ${unread} ungelesen` : ""}`}
+        aria-label={t.learner.notifications.bellLabel(unread)}
         className="relative text-[#555555] hover:text-[#1abc9c] transition-colors"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -75,20 +79,20 @@ export function NotificationBell() {
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-xl shadow-lg z-40 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
-            <p className="text-sm font-semibold text-[#04323e]">Benachrichtigungen</p>
+            <p className="text-sm font-semibold text-[#04323e]">{t.learner.notifications.title}</p>
             {unread > 0 && (
               <button
                 onClick={() => readAllNotifications()}
                 className="text-xs text-[#1abc9c] hover:underline"
               >
-                Alle als gelesen markieren
+                {t.learner.notifications.markAllRead}
               </button>
             )}
           </div>
 
           <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
             {items.length === 0 && (
-              <li className="px-4 py-6 text-sm text-gray-400 text-center">Keine Benachrichtigungen</li>
+              <li className="px-4 py-6 text-sm text-gray-400 text-center">{t.learner.notifications.empty}</li>
             )}
             {items.slice(0, 20).map((n) => (
               <li
@@ -96,9 +100,9 @@ export function NotificationBell() {
                 onClick={() => { if (!n.read_at) readNotify(n.id); }}
                 className={`px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${!n.read_at ? "bg-[#1abc9c]/5" : ""}`}
               >
-                <p className="text-sm text-[#04323e] leading-snug">{notificationLabel(n)}</p>
+                <p className="text-sm text-[#04323e] leading-snug">{notificationLabel(n, t.learner.notifications)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  {date(n.created_at, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </p>
               </li>
             ))}

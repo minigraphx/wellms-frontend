@@ -18,12 +18,12 @@ jest.mock("@escolalms/sdk/lib/react/context", () => {
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 
 function fillAndSubmit() {
-  fireEvent.change(screen.getByLabelText("First name"), { target: { value: "Anna" } });
-  fireEvent.change(screen.getByLabelText("Last name"), { target: { value: "Muster" } });
-  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "anna@example.com" } });
-  fireEvent.change(screen.getByLabelText("Password"), { target: { value: "secret123" } });
-  fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "secret123" } });
-  fireEvent.click(screen.getByRole("button", { name: /create account/i }));
+  fireEvent.change(screen.getByLabelText("Vorname"), { target: { value: "Anna" } });
+  fireEvent.change(screen.getByLabelText("Nachname"), { target: { value: "Muster" } });
+  fireEvent.change(screen.getByLabelText("E-Mail"), { target: { value: "anna@example.com" } });
+  fireEvent.change(screen.getByLabelText("Passwort"), { target: { value: "secret123" } });
+  fireEvent.change(screen.getByLabelText("Passwort bestätigen"), { target: { value: "secret123" } });
+  fireEvent.click(screen.getByRole("button", { name: /konto erstellen/i }));
 }
 
 describe("RegisterForm", () => {
@@ -50,7 +50,7 @@ describe("RegisterForm", () => {
 
     fillAndSubmit();
 
-    expect(await screen.findByText(/check your inbox/i)).toBeInTheDocument();
+    expect(await screen.findByText(/schau in dein postfach/i)).toBeInTheDocument();
     expect(screen.getByText(/anna@example\.com/)).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
   });
