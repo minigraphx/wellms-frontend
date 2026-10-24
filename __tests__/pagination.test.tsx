@@ -21,7 +21,7 @@ jest.mock("@escolalms/sdk/lib/react/context", () => {
   return { EscolaLMSContext };
 });
 
-import Home from "../app/page";
+import Home from "../app/HomeClient";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 
 const makeCourse = (id: number) => ({

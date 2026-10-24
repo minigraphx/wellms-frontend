@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import type { API } from "@escolalms/sdk/lib";
-import type { MouseEvent } from "react";
 import { ProgressBar } from "./ProgressBar";
+import { coursePath } from "../lib/seo";
 
 interface CourseCardProps {
   course: API.CourseListItem;
@@ -13,10 +13,9 @@ interface CourseCardProps {
 
 export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps) {
   return (
-    <Link
-      href={`/courses/${course.id}`}
-      className="group block border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-white"
-    >
+    // The title link stretches over the whole card (after:inset-0), so the author link can sit
+    // on top of it instead of being nested inside another link.
+    <article className="group relative border border-gray-100 rounded-xl overflow-hidden hover:shadow-lg transition-shadow bg-white">
       {course.image_url ? (
         <img src={course.image_url} alt={course.title} className="w-full h-44 object-cover" />
       ) : (
@@ -51,7 +50,9 @@ export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps)
         </div>
 
         <h2 className="font-semibold text-[#04323e] group-hover:text-[#1abc9c] transition-colors">
-          {course.title}
+          <Link href={coursePath(course)} className="after:absolute after:inset-0">
+            {course.title}
+          </Link>
         </h2>
 
         {course.summary && (
@@ -62,8 +63,7 @@ export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps)
           <p className="text-xs text-gray-400 mt-3">
             <Link
               href={`/instructors/${course.author.id}`}
-              onClick={(e: MouseEvent) => e.stopPropagation()}
-              className="hover:text-[#1abc9c] transition-colors"
+              className="relative z-10 hover:text-[#1abc9c] transition-colors"
             >
               {course.author.first_name} {course.author.last_name}
             </Link>
@@ -76,6 +76,6 @@ export function CourseCard({ course, isEnrolled, progressPct }: CourseCardProps)
           </div>
         )}
       </div>
-    </Link>
+    </article>
   );
 }

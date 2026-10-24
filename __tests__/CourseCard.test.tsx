@@ -46,8 +46,14 @@ describe("CourseCard", () => {
     expect(screen.getByText("10 lessons")).toBeInTheDocument();
   });
 
-  it("links to the correct course URL", () => {
+  it("links to the course under its slug URL", () => {
     render(<CourseCard course={baseCourse} />);
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/courses/1");
+    expect(screen.getByRole("link", { name: "Intro to TypeScript" })).toHaveAttribute("href", "/courses/1-intro-to-typescript");
+  });
+
+  it("links the author separately, without nesting links", () => {
+    const { container } = render(<CourseCard course={{ ...baseCourse, author: { id: 5, first_name: "Jane", last_name: "Doe" } } as API.CourseListItem} />);
+    expect(screen.getByRole("link", { name: "Jane Doe" })).toHaveAttribute("href", "/instructors/5");
+    expect(container.querySelector("a a")).toBeNull();
   });
 });

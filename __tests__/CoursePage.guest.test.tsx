@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import CoursePage from "../app/courses/[id]/page";
+import CoursePageClient from "../app/courses/[id]/CoursePageClient";
 
 const fetchCourse = jest.fn();
 const fetchProgram = jest.fn();
@@ -19,8 +19,6 @@ const mockPublicCourse = {
     },
   ],
 };
-
-jest.mock("next/navigation", () => ({ useParams: () => ({ id: "2" }) }));
 
 jest.mock("@escolalms/sdk/lib/react/context", () => {
   const React = jest.requireActual<typeof import("react")>("react");
@@ -53,7 +51,7 @@ describe("CoursePage for guests", () => {
   });
 
   it("shows the public course instead of a sign-in wall", async () => {
-    render(<CoursePage />);
+    render(<CoursePageClient courseId={2} initialCourse={null} />);
 
     expect(await screen.findByRole("heading", { level: 1, name: mockPublicCourse.title })).toBeInTheDocument();
     expect(fetchCourse).toHaveBeenCalledWith(2);
@@ -62,8 +60,19 @@ describe("CoursePage for guests", () => {
     expect(screen.getByText(/to enroll/i)).toBeInTheDocument();
   });
 
+  it("renders the server-fetched course right away and ignores another course left in the context", () => {
+    fetchCourse.mockReturnValue(new Promise(() => {}));
+    const fromServer = { ...mockPublicCourse, id: 3, title: "Vom Server geladen" };
+
+    render(<CoursePageClient courseId={3} initialCourse={fromServer as never} />);
+
+    expect(screen.getByRole("heading", { level: 1, name: "Vom Server geladen" })).toBeInTheDocument();
+    expect(screen.queryByText(mockPublicCourse.title)).toBeNull();
+    expect(screen.queryByText("Loading...")).toBeNull();
+  });
+
   it("links free preview lessons and keeps the others locked", async () => {
-    render(<CoursePage />);
+    render(<CoursePageClient courseId={2} initialCourse={null} />);
 
     await waitFor(() => expect(screen.getByText("1.1 Willkommen")).toBeInTheDocument());
     expect(screen.getByRole("link", { name: /1\.1 Willkommen/ })).toHaveAttribute("href", "/courses/2/topics/25");

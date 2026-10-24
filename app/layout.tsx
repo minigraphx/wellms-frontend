@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Figtree } from "next/font/google";
 import { Providers } from "./providers";
+import { SITE_NAME, SITE_URL } from "./lib/seo";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -10,15 +11,20 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "Wellms",
-  description: "Learning Management System",
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description: "Online courses",
   manifest: "/manifest.json",
-  themeColor: "#1abc9c",
+  openGraph: { siteName: SITE_NAME, type: "website" },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Wellms",
+    title: SITE_NAME,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1abc9c",
 };
 
 export default function RootLayout({
