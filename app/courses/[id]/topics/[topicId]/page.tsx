@@ -16,6 +16,8 @@ import { recordLearningActivity } from "../../../../components/LearningNudge";
 import { awardPoints } from "../../../../components/GamificationWidget";
 import { TopicQA } from "../../../../components/TopicQA";
 import { GenerateFlashcardsButton } from "../../../../components/GenerateFlashcardsButton";
+import { GuestTopicView } from "../../../../components/GuestTopicView";
+import { useViewer } from "../../../../components/useViewer";
 import type { API } from "@escolalms/sdk/lib";
 
 function flattenTopics(lessons: API.Lesson[]): API.Topic[] {
@@ -39,6 +41,16 @@ function findParentLesson(lessons: API.Lesson[], topicId: number): API.Lesson | 
 }
 
 export default function TopicPage() {
+  const { id, topicId } = useParams<{ id: string; topicId: string }>();
+  const viewer = useViewer();
+
+  if (viewer === "pending") return <div className="max-w-3xl mx-auto px-4 py-12 text-[#555555]">Loading...</div>;
+  // The member view needs the program endpoint (login); guests get free previews only.
+  if (viewer === "guest") return <GuestTopicView courseId={Number(id)} topicId={Number(topicId)} />;
+  return <MemberTopicPage />;
+}
+
+function MemberTopicPage() {
   const { id, topicId } = useParams<{ id: string; topicId: string }>();
   const courseId = Number(id);
   const currentTopicId = Number(topicId);
