@@ -1,0 +1,91 @@
+import type { Translation } from "../types";
+
+export const de = {
+  notFound: "Kurs nicht gefunden.",
+  // "Melde dich an, um dich einzuschreiben": the first part is the sign-in link.
+  signInLink: "Melde dich an",
+  toEnroll: ", um dich einzuschreiben",
+  enrolling: "Wird eingeschrieben…",
+  enrollNow: "Jetzt einschreiben – kostenlos",
+  enrolled: "Du bist eingeschrieben! Leg unten gleich los.",
+  enrollFailed: "Einschreibung fehlgeschlagen. Bitte versuche es erneut.",
+  viewCertificate: "Zertifikat ansehen",
+  resumeCourse: "Kurs fortsetzen",
+  startLearning: "Loslegen",
+  by: "Von",
+  progress: "Fortschritt",
+  accessExpires: (date: string) => `Zugang bis ${date}`,
+  joinLiveSession: "Live-Session beitreten",
+  about: "Über diesen Kurs",
+  curriculum: "Kursinhalt",
+  unlocks: (date: string) => `Freigeschaltet ab ${date}`,
+  guest: {
+    lessonNotFound: "Lektion nicht gefunden.",
+    backToCourse: "Zurück zum Kurs",
+    previewError: "Wir konnten diese Lektion nicht laden. Bitte versuche es später erneut.",
+    // "Das ist eine kostenlose Vorschau. [Melde dich an] oder [erstelle ein Konto], um dich …"
+    freePreview: "Das ist eine kostenlose Vorschau.",
+    or: "oder",
+    createAccountLink: "erstelle ein Konto",
+    toEnrollInCourse: ", um dich für den Kurs einzuschreiben.",
+    locked: "Diese Lektion gehört zum Kurs. Melde dich an oder erstelle ein Konto, um sie zu öffnen.",
+  },
+  complete: {
+    title: "Kurs abgeschlossen!",
+    finishedAll: (n: number) =>
+      n === 1
+        ? "Gut gemacht – du hast die Lektion abgeschlossen."
+        : `Gut gemacht – du hast alle ${n} Lektionen abgeschlossen.`,
+    certificate: "Abschlusszertifikat",
+    generating: "Wird erstellt…",
+    download: "Zertifikat herunterladen (PDF)",
+    downloadFailed: "Das Zertifikat konnte nicht erstellt werden. Bitte versuche es erneut.",
+    linkCopied: "✓ Link kopiert!",
+    copyLink: "Link zum Teilen kopieren",
+    noCertificate: "Für diesen Kurs ist kein Zertifikat eingerichtet.",
+    browseMore: "Weitere Kurse entdecken",
+  },
+};
+
+export const en: Translation<typeof de> = {
+  notFound: "Course not found.",
+  signInLink: "Sign in",
+  toEnroll: " to enroll",
+  enrolling: "Enrolling…",
+  enrollNow: "Enroll now — it's free",
+  enrolled: "You're enrolled! Start learning below.",
+  enrollFailed: "Enrollment failed. Please try again.",
+  viewCertificate: "View certificate",
+  resumeCourse: "Resume course",
+  startLearning: "Start learning",
+  by: "By",
+  progress: "Progress",
+  accessExpires: (date: string) => `Access expires ${date}`,
+  joinLiveSession: "Join live session",
+  about: "About this course",
+  curriculum: "Curriculum",
+  unlocks: (date: string) => `Unlocks ${date}`,
+  guest: {
+    lessonNotFound: "Lesson not found.",
+    backToCourse: "Back to the course",
+    previewError: "We could not load this lesson. Please try again later.",
+    freePreview: "This is a free preview.",
+    or: "or",
+    createAccountLink: "create an account",
+    toEnrollInCourse: " to enroll in the course.",
+    locked: "This lesson is part of the course. Sign in or create an account to access it.",
+  },
+  complete: {
+    title: "Course complete!",
+    finishedAll: (n: number) =>
+      n === 1 ? "Great work — you've finished the lesson." : `Great work — you've finished all ${n} lessons.`,
+    certificate: "Certificate of completion",
+    generating: "Generating…",
+    download: "Download certificate (PDF)",
+    downloadFailed: "Could not generate certificate. Please try again.",
+    linkCopied: "✓ Link copied!",
+    copyLink: "Copy shareable link",
+    noCertificate: "No certificate is configured for this course.",
+    browseMore: "Browse more courses",
+  },
+};

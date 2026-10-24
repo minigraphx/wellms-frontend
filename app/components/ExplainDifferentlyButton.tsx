@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useT } from "../i18n/I18nProvider";
 
 interface Props {
   topicTitle: string;
@@ -10,6 +11,7 @@ export function ExplainDifferentlyButton({ topicTitle }: Props) {
   const [explanation, setExplanation] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const { explain: text } = useT().player;
 
   async function explain() {
     setLoading(true);
@@ -32,7 +34,7 @@ export function ExplainDifferentlyButton({ topicTitle }: Props) {
       const data = await res.json();
       setExplanation(data.content ?? "");
     } catch {
-      setError("Could not generate explanation. Please try again.");
+      setError(text.error);
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ export function ExplainDifferentlyButton({ topicTitle }: Props) {
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
           </svg>
-          {loading ? "Generating alternative explanation…" : "Explain differently"}
+          {loading ? text.generating : text.explain}
         </button>
         {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
       </div>
@@ -83,13 +85,13 @@ export function ExplainDifferentlyButton({ topicTitle }: Props) {
               d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
             />
           </svg>
-          Alternative explanation
+          {text.alternative}
         </h4>
         <button
           onClick={() => setExplanation("")}
           className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
         >
-          Dismiss
+          {text.dismiss}
         </button>
       </div>
       <p className="text-sm text-[#555555] leading-relaxed whitespace-pre-wrap">{explanation}</p>
@@ -98,7 +100,7 @@ export function ExplainDifferentlyButton({ topicTitle }: Props) {
         disabled={loading}
         className="text-xs text-[#1abc9c] hover:text-[#15a288] disabled:opacity-50 transition-colors"
       >
-        {loading ? "Regenerating…" : "Try a different explanation"}
+        {loading ? text.regenerating : text.tryDifferent}
       </button>
     </div>
   );

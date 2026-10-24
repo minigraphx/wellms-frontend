@@ -4,6 +4,7 @@ import { useContext, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { useT } from "../i18n/I18nProvider";
 
 export function ResetPasswordForm() {
   const { reset } = useContext(EscolaLMSContext);
@@ -16,16 +17,17 @@ export function ResetPasswordForm() {
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const t = useT();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (password !== passwordConfirmation) {
-      setError("Passwords do not match.");
+      setError(t.auth.passwordsDontMatch);
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t.auth.passwordTooShort);
       return;
     }
     setLoading(true);
@@ -34,10 +36,10 @@ export function ResetPasswordForm() {
       if (res.success) {
         router.push("/?resetSuccess=1");
       } else {
-        setError("Invalid or expired reset link. Please request a new one.");
+        setError(t.auth.invalidOrExpiredLink);
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t.common.error);
     } finally {
       setLoading(false);
     }
@@ -46,8 +48,8 @@ export function ResetPasswordForm() {
   if (!token || !email) {
     return (
       <div className="text-center space-y-3">
-        <p className="text-red-600 text-sm">Invalid reset link.</p>
-        <Link href="/forgot-password" className="text-[#1abc9c] hover:underline text-sm">Request a new one</Link>
+        <p className="text-red-600 text-sm">{t.auth.invalidResetLink}</p>
+        <Link href="/forgot-password" className="text-[#1abc9c] hover:underline text-sm">{t.auth.requestNewOne}</Link>
       </div>
     );
   }
@@ -55,7 +57,7 @@ export function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-[#04323e] mb-1">New password</label>
+        <label className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.newPassword}</label>
         <input
           type="password"
           value={password}
@@ -65,7 +67,7 @@ export function ResetPasswordForm() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-[#04323e] mb-1">Confirm new password</label>
+        <label className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.confirmNewPassword}</label>
         <input
           type="password"
           value={passwordConfirmation}
@@ -80,7 +82,7 @@ export function ResetPasswordForm() {
         disabled={loading}
         className="w-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold py-2.5 rounded-full transition-colors"
       >
-        {loading ? "Resetting…" : "Reset password"}
+        {loading ? t.auth.resetting : t.auth.resetPassword}
       </button>
     </form>
   );

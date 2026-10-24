@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { API } from "@escolalms/sdk/lib";
+import { useFormat, useT } from "../i18n/I18nProvider";
 
 function TopicRow({
   topic,
@@ -54,6 +55,8 @@ function LessonSection({
   depth?: number;
 }) {
   const [open, setOpen] = useState(depth === 0);
+  const t = useT();
+  const { date } = useFormat();
   const drip = isEnrolled && isDripLocked(lesson);
 
   if (drip) {
@@ -63,7 +66,7 @@ function LessonSection({
           <div>
             <span className="font-semibold text-[#04323e]">{lesson.title}</span>
             <p className="text-xs text-gray-400 mt-0.5">
-              🕐 Unlocks {new Date(lesson.active_from!).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+              🕐 {t.course.unlocks(date(lesson.active_from!, { month: "short", day: "numeric", year: "numeric" }))}
             </p>
           </div>
           <span className="text-gray-300">🔒</span>

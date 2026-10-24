@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useToast } from "./Toast";
+import { useT } from "../i18n/I18nProvider";
 
 const LAST_ACTIVITY_KEY = "nudge_last_activity";
 const NUDGE_SHOWN_KEY = "nudge_last_shown";
@@ -15,15 +16,9 @@ export function recordLearningActivity() {
   }
 }
 
-const NUDGES = [
-  "Du hast länger nicht gelernt — wie wäre es mit einer kurzen Lektion?",
-  "Regelmäßiges Lernen macht den Unterschied. Bereit für heute?",
-  "Deine Flashcards warten auf dich! Zeit für eine kurze Wiederholung.",
-  "Kleine Lerneinheiten jeden Tag führen zu großen Ergebnissen.",
-];
-
 export function LearningNudge() {
   const { toast } = useToast();
+  const t = useT();
   const shown = useRef(false);
 
   const check = useCallback(() => {
@@ -34,16 +29,17 @@ export function LearningNudge() {
     const idle = lastActivity > 0 && now - lastActivity > IDLE_THRESHOLD_MS;
     const cooldownOk = now - lastNudge > NUDGE_COOLDOWN_MS;
     if (idle && cooldownOk) {
-      const msg = NUDGES[Math.floor(Math.random() * NUDGES.length)];
+      const nudges = Object.values(t.learner.nudges);
+      const msg = nudges[Math.floor(Math.random() * nudges.length)];
       toast(msg);
       localStorage.setItem(NUDGE_SHOWN_KEY, now.toString());
       shown.current = true;
     }
-  }, [toast]);
+  }, [toast, t]);
 
   useEffect(() => {
-    const t = setTimeout(check, 3000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(check, 3000);
+    return () => clearTimeout(timer);
   }, [check]);
 
   return null;

@@ -6,12 +6,14 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCard } from "./components/CourseCard";
 import { Nav } from "./components/Nav";
 import { RecommendedCourses } from "./components/RecommendedCourses";
+import { useT } from "./i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 // initialCourses: first catalogue page fetched on the server, so the HTML lists the courses.
 export default function HomeClient({ initialCourses = [] }: { initialCourses?: API.CourseListItem[] }) {
   const { courses, fetchCourses, user, categoryTree, fetchCategories, myCourses, fetchMyCourses } =
     useContext(EscolaLMSContext);
+  const t = useT();
 
   const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
@@ -35,8 +37,8 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
 
   // Debounce search input
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(search), 400);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebounced(search), 400);
+    return () => clearTimeout(timer);
   }, [search]);
 
   // Fetch on filter/search change (always resets to page 1)
@@ -108,8 +110,8 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
       <>
         <Nav />
         <main className="max-w-5xl mx-auto px-4 py-12">
-          <h1 className="text-3xl font-bold text-[#04323e] mb-8">Courses</h1>
-          <p className="text-gray-500">Loading...</p>
+          <h1 className="text-3xl font-bold text-[#04323e] mb-8">{t.common.courses}</h1>
+          <p className="text-gray-500">{t.common.loading}</p>
         </main>
       </>
     );
@@ -121,9 +123,9 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
       <main className="max-w-5xl mx-auto px-4 py-12">
         {loggedIn && (
           <div className="mb-6 flex items-center justify-between bg-[#04323e]/5 rounded-xl px-5 py-4">
-            <p className="text-sm text-[#04323e] font-medium">Continue learning where you left off</p>
+            <p className="text-sm text-[#04323e] font-medium">{t.catalog.continueLearning}</p>
             <Link href="/dashboard" className="text-sm font-semibold text-[#1abc9c] hover:underline">
-              My courses →
+              {t.nav.myCourses} →
             </Link>
           </div>
         )}
@@ -137,7 +139,7 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
         )}
 
         <div className="flex items-center justify-between mb-4 gap-4">
-          <h1 className="text-3xl font-bold text-[#04323e]">Courses</h1>
+          <h1 className="text-3xl font-bold text-[#04323e]">{t.common.courses}</h1>
           <input
             type="search"
             value={search}
@@ -145,7 +147,7 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
               setSearch(e.target.value);
               setActiveCategoryId(null);
             }}
-            placeholder="Search courses…"
+            placeholder={t.catalog.searchPlaceholder}
             className="border border-gray-200 rounded-full px-4 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
           />
         </div>
@@ -160,7 +162,7 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
                   : "border-gray-200 text-[#555555] hover:border-[#1abc9c] hover:text-[#1abc9c]"
               }`}
             >
-              All
+              {t.catalog.allCategoriesChip}
             </button>
             {categories.map((cat) => (
               <button
@@ -179,7 +181,7 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
         )}
 
         {allCourses.length === 0 && !courses.loading && (
-          <p className="text-gray-500">No courses found.</p>
+          <p className="text-gray-500">{t.catalog.noCourses}</p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -201,7 +203,7 @@ export default function HomeClient({ initialCourses = [] }: { initialCourses?: A
               data-testid="load-more"
               className="px-8 py-2.5 rounded-full border border-[#1abc9c] text-[#1abc9c] font-semibold text-sm hover:bg-[#1abc9c] hover:text-white transition-colors disabled:opacity-50"
             >
-              {courses.loading ? "Loading…" : "Load more"}
+              {courses.loading ? t.common.loading : t.catalog.loadMore}
             </button>
           </div>
         )}

@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { loadCards, saveCards } from "../flashcards/storage";
 import type { Flashcard } from "../flashcards/storage";
+import { useT } from "../i18n/I18nProvider";
 
 interface Props {
   topicId: number;
@@ -34,13 +35,14 @@ export function GenerateFlashcardsButton({ topicId, topicTitle, htmlContent }: P
   const [done, setDone] = useState(false);
   const [count, setCount] = useState(0);
   const [error, setError] = useState("");
+  const { flashcards: labels } = useT().player;
 
   const handleGenerate = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const text = stripHtml(htmlContent);
-      if (text.length < 30) { setError("Zu wenig Inhalt zum Generieren."); setLoading(false); return; }
+      if (text.length < 30) { setError(labels.tooLittleContent); setLoading(false); return; }
 
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -71,17 +73,17 @@ export function GenerateFlashcardsButton({ topicId, topicTitle, htmlContent }: P
       setCount(newCards.length);
       setDone(true);
     } catch {
-      setError("Flashcards konnten nicht generiert werden.");
+      setError(labels.failed);
     }
     setLoading(false);
-  }, [topicId, topicTitle, htmlContent]);
+  }, [topicId, topicTitle, htmlContent, labels]);
 
   if (done) {
     return (
       <p className="text-sm text-[#1abc9c]">
-        {count} Flashcards erstellt!{" "}
+        {labels.created(count)}{" "}
         <Link href="/flashcards" className="underline hover:no-underline">
-          Jetzt lernen →
+          {labels.studyNow} →
         </Link>
       </p>
     );
@@ -96,10 +98,10 @@ export function GenerateFlashcardsButton({ topicId, topicTitle, htmlContent }: P
       >
         {loading ? (
           <>
-            <span className="animate-spin">⟳</span> Generiere Flashcards…
+            <span className="animate-spin">⟳</span> {labels.generating}
           </>
         ) : (
-          <>🃏 Flashcards generieren</>
+          <>🃏 {labels.generate}</>
         )}
       </button>
       {error && <p className="text-xs text-red-500">{error}</p>}

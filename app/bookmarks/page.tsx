@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
+import { useT } from "../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 export default function BookmarksPage() {
   const { user, fetchBookmarkNotes, deleteBookmarkNote } = useContext(EscolaLMSContext);
   const router = useRouter();
+  const t = useT();
 
   const [mounted, setMounted] = useState(false);
   const [bookmarks, setBookmarks] = useState<API.BookmarkNote[]>([]);
@@ -39,27 +41,27 @@ export default function BookmarksPage() {
     <>
       <Nav />
       <main className="max-w-4xl mx-auto px-4 py-12">
-        <h1 className="text-3xl font-bold text-[#04323e] mb-8">Bookmarks</h1>
+        <h1 className="text-3xl font-bold text-[#04323e] mb-8">{t.nav.bookmarks}</h1>
 
-        {loading && <p className="text-gray-500">Loading…</p>}
+        {loading && <p className="text-gray-500">{t.common.loading}</p>}
 
         {!loading && bookmarks.length === 0 && (
           <div className="text-center py-20">
             <p className="text-4xl mb-4">☆</p>
-            <p className="text-gray-400 text-lg mb-4">No bookmarks yet.</p>
-            <p className="text-sm text-gray-400">Star any lesson while learning to bookmark it here.</p>
+            <p className="text-gray-400 text-lg mb-4">{t.learner.bookmarks.empty}</p>
+            <p className="text-sm text-gray-400">{t.learner.bookmarks.emptyHint}</p>
           </div>
         )}
 
         {topicBookmarks.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-lg font-semibold text-[#04323e] mb-4">Lessons</h2>
+            <h2 className="text-lg font-semibold text-[#04323e] mb-4">{t.learner.bookmarks.lessons}</h2>
             <ul className="space-y-3">
               {topicBookmarks.map((b) => {
                 const bk = b as any;
                 const topicId = bk.bookmarkable_id;
                 const courseId = bk.bookmarkable?.course_id;
-                const title = bk.bookmarkable?.title ?? `Lesson #${topicId}`;
+                const title = bk.bookmarkable?.title ?? t.learner.bookmarks.lessonFallback(topicId);
                 const courseTitle = bk.bookmarkable?.course_title ?? "";
                 return (
                   <li key={b.id} className="flex items-start justify-between gap-4 bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
@@ -79,7 +81,7 @@ export default function BookmarksPage() {
                     </div>
                     <button
                       onClick={() => handleDelete(b.id)}
-                      aria-label="Remove bookmark"
+                      aria-label={t.learner.bookmarks.remove}
                       className="text-gray-300 hover:text-red-400 transition-colors shrink-0 text-lg"
                     >
                       ×
@@ -93,7 +95,7 @@ export default function BookmarksPage() {
 
         {courseBookmarks.length > 0 && (
           <section>
-            <h2 className="text-lg font-semibold text-[#04323e] mb-4">Courses</h2>
+            <h2 className="text-lg font-semibold text-[#04323e] mb-4">{t.learner.bookmarks.courses}</h2>
             <ul className="space-y-3">
               {courseBookmarks.map((b) => {
                 const bk = b as any;
@@ -103,11 +105,11 @@ export default function BookmarksPage() {
                       href={`/courses/${bk.bookmarkable_id}`}
                       className="font-medium text-[#04323e] hover:text-[#1abc9c] transition-colors"
                     >
-                      Course #{bk.bookmarkable_id}
+                      {t.learner.bookmarks.courseFallback(bk.bookmarkable_id)}
                     </Link>
                     <button
                       onClick={() => handleDelete(b.id)}
-                      aria-label="Remove bookmark"
+                      aria-label={t.learner.bookmarks.remove}
                       className="text-gray-300 hover:text-red-400 transition-colors shrink-0 text-lg"
                     >
                       ×

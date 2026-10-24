@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { QuestionType } from "@escolalms/sdk/lib/types/enums";
 import type { API } from "@escolalms/sdk/lib";
+import { useT } from "../i18n/I18nProvider";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -68,6 +69,9 @@ function MultipleChoice({
 }
 
 function TrueFalse({ answer, onChange }: { answer: string; onChange: (v: string) => void }) {
+  const { quiz } = useT().player;
+  // The values stay "True"/"False": they are the answers sent to the API.
+  const labels: Record<string, string> = { True: quiz.trueLabel, False: quiz.falseLabel };
   return (
     <div className="flex gap-3">
       {["True", "False"].map((opt) => (
@@ -83,7 +87,7 @@ function TrueFalse({ answer, onChange }: { answer: string; onChange: (v: string)
             onChange={() => onChange(opt)}
             className="accent-[#1abc9c]"
           />
-          <span className="text-sm">{opt}</span>
+          <span className="text-sm">{labels[opt]}</span>
         </label>
       ))}
     </div>
@@ -91,12 +95,13 @@ function TrueFalse({ answer, onChange }: { answer: string; onChange: (v: string)
 }
 
 function ShortAnswer({ answer, onChange }: { answer: string; onChange: (v: string) => void }) {
+  const t = useT();
   return (
     <input
       type="text"
       value={answer}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Your answer…"
+      placeholder={t.player.quiz.yourAnswer}
       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
     />
   );
@@ -113,6 +118,7 @@ function Matching({
 }) {
   const subQuestions: string[] = q.options?.sub_questions ?? [];
   const subAnswers: string[] = q.options?.sub_answers ?? [];
+  const t = useT();
 
   const parsed: Record<string, string> = (() => {
     try { return JSON.parse(answer || "{}"); } catch { return {}; }
@@ -133,7 +139,7 @@ function Matching({
             onChange={(e) => update(sq, e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c] bg-white"
           >
-            <option value="">Select…</option>
+            <option value="">{t.player.quiz.select}</option>
             {subAnswers.map((sa, j) => (
               <option key={j} value={sa}>{sa}</option>
             ))}
@@ -145,24 +151,26 @@ function Matching({
 }
 
 function Numerical({ answer, onChange }: { answer: string; onChange: (v: string) => void }) {
+  const t = useT();
   return (
     <input
       type="number"
       value={answer}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Enter a number…"
+      placeholder={t.player.quiz.enterNumber}
       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c]"
     />
   );
 }
 
 function Essay({ answer, onChange }: { answer: string; onChange: (v: string) => void }) {
+  const t = useT();
   return (
     <textarea
       value={answer}
       onChange={(e) => onChange(e.target.value)}
       rows={5}
-      placeholder="Write your answer…"
+      placeholder={t.player.quiz.writeAnswer}
       className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c] resize-none"
     />
   );
@@ -235,6 +243,7 @@ function QuestionCard({
 export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
   const ctx = useContext(EscolaLMSContext) as any;
   const { user, apiUrl, token } = ctx;
+  const t = useT();
 
   const [attempt, setAttempt] = useState<API.QuizAttempt | null>(null);
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -271,11 +280,11 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
       setFinished(false);
       setScore(null);
     } catch {
-      setError("Could not start quiz. Please try again.");
+      setError(t.player.quiz.startError);
     } finally {
       setLoading(false);
     }
-  }, [apiUrl, token, quizId]);
+  }, [apiUrl, token, quizId, t]);
 
   const handleAnswer = useCallback(
     (questionId: number, value: string | string[]) => {
@@ -356,17 +365,17 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
         }
       }
     } catch {
-      setError("Could not submit quiz. Please try again.");
+      setError(t.player.quiz.submitError);
     } finally {
       setSubmitting(false);
     }
-  }, [apiUrl, token, attempt, answers, onComplete]);
+  }, [apiUrl, token, attempt, answers, onComplete, t]);
 
   const questions: QuizQuestion[] = attempt?.questions ?? [];
   const maxAttempts = topic.topicable?.max_attempts;
 
   if (!user.value) {
-    return <p className="text-gray-400 text-sm">Sign in to take this quiz.</p>;
+    return <p className="text-gray-400 text-sm">{t.player.quiz.signIn}</p>;
   }
 
   if (finished && score) {
@@ -378,20 +387,20 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
           {passed ? "✓" : "✗"}
         </div>
         <div>
-          <h3 className="text-2xl font-bold text-[#04323e]">{passed ? "Quiz passed!" : "Quiz not passed"}</h3>
+          <h3 className="text-2xl font-bold text-[#04323e]">{passed ? t.player.quiz.passed : t.player.quiz.notPassed}</h3>
           <p className="text-[#555555] mt-1">
-            Score: {score.result} / {score.max} ({pct}%)
+            {t.player.quiz.score(score.result, score.max, pct)}
           </p>
         </div>
         {!passed && (gapLoading || gapAnalysis) && (
           <div className="text-left bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1 max-w-sm mx-auto">
-            <p className="text-xs font-semibold text-amber-800">Was sollte ich wiederholen?</p>
+            <p className="text-xs font-semibold text-amber-800">{t.player.quiz.whatToReview}</p>
             {gapLoading ? (
-              <p className="text-xs text-amber-600 animate-pulse">Analysiere deine Ergebnisse…</p>
+              <p className="text-xs text-amber-600 animate-pulse">{t.player.quiz.analyzing}</p>
             ) : (
               <p className="text-sm text-[#555555] whitespace-pre-line">{gapAnalysis}</p>
             )}
-            <p className="text-xs text-gray-400">KI-Analyse</p>
+            <p className="text-xs text-gray-400">{t.player.quiz.aiAnalysis}</p>
           </div>
         )}
         <button
@@ -399,7 +408,7 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
           disabled={loading}
           className="bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold px-8 py-3 rounded-full transition-colors"
         >
-          {loading ? "Starting…" : "Retake quiz"}
+          {loading ? t.player.quiz.starting : t.player.quiz.retake}
         </button>
       </div>
     );
@@ -411,10 +420,10 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
         <p className="text-4xl">📝</p>
         <h3 className="text-xl font-bold text-[#04323e]">{topic.title}</h3>
         {maxAttempts && (
-          <p className="text-sm text-gray-400">Up to {maxAttempts} attempt{maxAttempts !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-gray-400">{t.player.quiz.maxAttempts(maxAttempts)}</p>
         )}
         {topic.topicable?.max_execution_time && (
-          <p className="text-sm text-gray-400">Time limit: {topic.topicable.max_execution_time} minutes</p>
+          <p className="text-sm text-gray-400">{t.player.quiz.timeLimit(topic.topicable.max_execution_time)}</p>
         )}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
@@ -422,7 +431,7 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
           disabled={loading}
           className="bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold px-8 py-3 rounded-full transition-colors"
         >
-          {loading ? "Starting…" : "Start quiz"}
+          {loading ? t.player.quiz.starting : t.player.quiz.start}
         </button>
       </div>
     );
@@ -436,7 +445,7 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
       {/* Progress bar */}
       <div>
         <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-          <span>Question {currentIdx + 1} of {questions.length}</span>
+          <span>{t.player.quiz.questionOf(currentIdx + 1, questions.length)}</span>
           <span>{Math.round(((currentIdx + 1) / questions.length) * 100)}%</span>
         </div>
         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -465,7 +474,7 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
           disabled={currentIdx === 0}
           className="px-5 py-2.5 rounded-full border border-gray-200 text-sm text-[#555555] hover:border-gray-300 disabled:opacity-40 transition-colors"
         >
-          ← Previous
+          ← {t.common.previous}
         </button>
 
         {isLast ? (
@@ -474,14 +483,14 @@ export function GiftQuizPlayer({ topic, onComplete, onPass }: Props) {
             disabled={submitting}
             className="px-6 py-2.5 rounded-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold text-sm transition-colors"
           >
-            {submitting ? "Submitting…" : "Submit quiz"}
+            {submitting ? t.player.quiz.submitting : t.player.quiz.submit}
           </button>
         ) : (
           <button
             onClick={() => setCurrentIdx((i) => Math.min(questions.length - 1, i + 1))}
             className="px-5 py-2.5 rounded-full bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold text-sm transition-colors"
           >
-            Next →
+            {t.common.next} →
           </button>
         )}
       </div>

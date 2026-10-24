@@ -4,6 +4,7 @@ import { Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState
 import { useRouter, useSearchParams } from "next/navigation";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { CourseCard } from "../components/CourseCard";
+import { useT } from "../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 const LEVELS = ["beginner", "intermediate", "advanced"] as const;
@@ -20,6 +21,7 @@ export default function SearchPage() {
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useT();
 
   const { courses, fetchCourses, categoryTree, fetchCategories, myCourses, fetchMyCourses, user } =
     useContext(EscolaLMSContext);
@@ -37,8 +39,8 @@ function SearchContent() {
   // Debounced query for API calls
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query), 400);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedQuery(query), 400);
+    return () => clearTimeout(timer);
   }, [query]);
 
   useEffect(() => {
@@ -127,14 +129,14 @@ function SearchContent() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-[#04323e] mb-6">Search courses</h1>
+      <h1 className="text-3xl font-bold text-[#04323e] mb-6">{t.catalog.searchTitle}</h1>
 
       {/* Search input */}
       <input
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search by title…"
+        placeholder={t.catalog.searchByTitle}
         autoFocus
         className="w-full border border-gray-200 rounded-full px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c] mb-6"
       />
@@ -148,7 +150,7 @@ function SearchContent() {
             onChange={(e) => setActiveCategoryId(e.target.value ? Number(e.target.value) : null)}
             className="border border-gray-200 rounded-full px-4 py-1.5 text-sm text-[#555555] focus:outline-none focus:ring-2 focus:ring-[#1abc9c] bg-white"
           >
-            <option value="">All categories</option>
+            <option value="">{t.catalog.allCategories}</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -163,7 +165,7 @@ function SearchContent() {
           onChange={(e) => setActiveLevel(e.target.value || null)}
           className="border border-gray-200 rounded-full px-4 py-1.5 text-sm text-[#555555] focus:outline-none focus:ring-2 focus:ring-[#1abc9c] bg-white"
         >
-          <option value="">All levels</option>
+          <option value="">{t.catalog.allLevels}</option>
           {LEVELS.map((level) => (
             <option key={level} value={level}>
               {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -177,7 +179,7 @@ function SearchContent() {
             onClick={clearFilters}
             className="text-sm text-gray-400 hover:text-[#1abc9c] transition-colors px-2"
           >
-            Clear filters ×
+            {t.catalog.clearFilters} ×
           </button>
         )}
       </div>
@@ -185,27 +187,25 @@ function SearchContent() {
       {/* Result count */}
       {mounted && !courses.loading && (
         <p className="text-sm text-gray-400 mb-4">
-          {totalCount !== null
-            ? `${totalCount} course${totalCount === 1 ? "" : "s"} found`
-            : `${allCourses.length} course${allCourses.length === 1 ? "" : "s"} found`}
+          {t.catalog.coursesFound(totalCount ?? allCourses.length)}
         </p>
       )}
 
       {/* Loading state */}
       {(!mounted || (courses.loading && allCourses.length === 0)) && (
-        <p className="text-gray-500">Loading…</p>
+        <p className="text-gray-500">{t.common.loading}</p>
       )}
 
       {/* Empty state */}
       {mounted && !courses.loading && allCourses.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-gray-400 text-lg mb-2">No courses match your search.</p>
+          <p className="text-gray-400 text-lg mb-2">{t.catalog.noMatch}</p>
           {hasFilters && (
             <button
               onClick={clearFilters}
               className="mt-3 text-sm text-[#1abc9c] hover:underline"
             >
-              Clear filters and try again
+              {t.catalog.clearFiltersRetry}
             </button>
           )}
         </div>
@@ -230,7 +230,7 @@ function SearchContent() {
             disabled={courses.loading}
             className="px-8 py-2.5 rounded-full border border-[#1abc9c] text-[#1abc9c] font-semibold text-sm hover:bg-[#1abc9c] hover:text-white transition-colors disabled:opacity-50"
           >
-            {courses.loading ? "Loading…" : "Load more"}
+            {courses.loading ? t.common.loading : t.catalog.loadMore}
           </button>
         </div>
       )}

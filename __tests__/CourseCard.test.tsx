@@ -26,12 +26,12 @@ describe("CourseCard", () => {
 
   it("shows 'In Progress' badge when enrolled and progress < 100", () => {
     render(<CourseCard course={baseCourse} isEnrolled progressPct={45} />);
-    expect(screen.getByTestId("enrolled-badge")).toHaveTextContent("In Progress");
+    expect(screen.getByTestId("enrolled-badge")).toHaveTextContent("In Bearbeitung");
   });
 
   it("shows 'Completed' badge when enrolled and progress is 100", () => {
     render(<CourseCard course={baseCourse} isEnrolled progressPct={100} />);
-    expect(screen.getByTestId("enrolled-badge")).toHaveTextContent("✓ Completed");
+    expect(screen.getByTestId("enrolled-badge")).toHaveTextContent("✓ Abgeschlossen");
   });
 
   it("renders a progress bar when enrolled with progressPct", () => {
@@ -43,7 +43,7 @@ describe("CourseCard", () => {
   it("shows level and topic count chips", () => {
     render(<CourseCard course={baseCourse} />);
     expect(screen.getByText("beginner")).toBeInTheDocument();
-    expect(screen.getByText("10 lessons")).toBeInTheDocument();
+    expect(screen.getByText("10 Lektionen")).toBeInTheDocument();
   });
 
   it("links to the course under its slug URL", () => {

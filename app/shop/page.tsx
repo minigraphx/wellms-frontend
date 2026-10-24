@@ -5,11 +5,13 @@ import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
 import { ProductCard } from "../components/ProductCard";
 import { useToast } from "../components/Toast";
+import { useT } from "../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 export default function ShopPage() {
   const { fetchProducts, user, addToCart, fetchCart } = useContext(EscolaLMSContext);
   const { toast } = useToast();
+  const t = useT();
 
   const [products, setProducts] = useState<API.Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,7 @@ export default function ShopPage() {
   const handleAddToCart = useCallback(
     async (id: number) => {
       if (!user.value) {
-        toast("Please sign in to add items to your cart.", "error");
+        toast(t.shop.signInToAddToCart, "error");
         return;
       }
       setCartLoadingId(id);
@@ -59,33 +61,33 @@ export default function ShopPage() {
         const res = await addToCart(id);
         if ((res as any)?.success !== false) {
           await fetchCart();
-          toast("Added to cart!");
+          toast(t.shop.addedToCart);
         } else {
-          toast("Failed to add to cart.", "error");
+          toast(t.shop.addToCartFailed, "error");
         }
       } catch {
-        toast("Failed to add to cart.", "error");
+        toast(t.shop.addToCartFailed, "error");
       } finally {
         setCartLoadingId(null);
       }
     },
-    [user.value, addToCart, fetchCart, toast]
+    [user.value, addToCart, fetchCart, toast, t]
   );
 
   return (
     <>
       <Nav />
       <main className="max-w-5xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-bold text-[#04323e] mb-2">Shop</h1>
-        <p className="text-[#555555] mb-8">Courses, bundles and subscriptions</p>
+        <h1 className="text-3xl font-bold text-[#04323e] mb-2">{t.nav.shop}</h1>
+        <p className="text-[#555555] mb-8">{t.shop.subtitle}</p>
 
         {loading && products.length === 0 && (
-          <p className="text-gray-500">Loading…</p>
+          <p className="text-gray-500">{t.common.loading}</p>
         )}
 
         {!loading && products.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-gray-400 text-lg">No products available yet.</p>
+            <p className="text-gray-400 text-lg">{t.shop.noProducts}</p>
           </div>
         )}
 
@@ -106,7 +108,7 @@ export default function ShopPage() {
               onClick={handleLoadMore}
               className="px-8 py-2.5 rounded-full border border-[#1abc9c] text-[#1abc9c] font-semibold text-sm hover:bg-[#1abc9c] hover:text-white transition-colors"
             >
-              Load more
+              {t.shop.loadMore}
             </button>
           </div>
         )}

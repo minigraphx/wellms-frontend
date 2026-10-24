@@ -4,19 +4,25 @@ import { useCallback, useContext } from "react";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import type { API } from "@escolalms/sdk/lib";
+import { useFormat, useT } from "../i18n/I18nProvider";
 
 interface CartDrawerProps {
   open: boolean;
   onClose: () => void;
 }
 
-function formatPrice(cents: number | string | undefined): string {
+const CURRENCY = "EUR";
+
+function toAmount(cents: number | string | undefined): number {
   const n = typeof cents === "string" ? parseFloat(cents) : (cents ?? 0);
-  return (n / 100).toLocaleString("en", { style: "currency", currency: "EUR" });
+  return n / 100;
 }
 
 export function CartDrawer({ open, onClose }: CartDrawerProps) {
   const { cart, removeFromCart, fetchCart } = useContext(EscolaLMSContext);
+  const t = useT();
+  const { currency } = useFormat();
+  const formatPrice = (cents: number | string | undefined) => currency(toAmount(cents), CURRENCY);
   const cartData = (cart as unknown as { value?: API.Cart })?.value;
   const items = cartData?.items ?? [];
 
@@ -44,10 +50,10 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
       {/* Drawer */}
       <aside className="fixed right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl z-50 flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-[#04323e]">Cart</h2>
+          <h2 className="text-lg font-semibold text-[#04323e]">{t.shop.cart}</h2>
           <button
             onClick={onClose}
-            aria-label="Close cart"
+            aria-label={t.shop.closeCart}
             className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
           >
             ×
@@ -58,17 +64,17 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
           {items.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-4xl mb-3">🛒</p>
-              <p className="text-gray-400">Your cart is empty.</p>
+              <p className="text-gray-400">{t.shop.cartEmpty}</p>
               <button
                 onClick={onClose}
                 className="mt-4 text-sm text-[#1abc9c] hover:underline"
               >
-                Continue browsing
+                {t.shop.continueBrowsing}
               </button>
             </div>
           ) : (
             items.map((item, i) => {
-              const name = item.product?.name ?? `Item ${i + 1}`;
+              const name = item.product?.name ?? t.shop.item(i + 1);
               const price = item.total_with_tax ?? (item as any).price ?? 0;
               const productId = item.product_id ?? Number(item.product?.id);
               return (
@@ -82,7 +88,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
                   </div>
                   <button
                     onClick={() => handleRemove(productId)}
-                    aria-label="Remove item"
+                    aria-label={t.shop.removeItem}
                     className="text-gray-300 hover:text-red-400 transition-colors text-lg shrink-0"
                   >
                     ×
@@ -96,10 +102,10 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
         {items.length > 0 && (
           <div className="px-6 py-5 border-t border-gray-100 space-y-4">
             {cartData?.coupon && (
-              <p className="text-sm text-[#1abc9c]">Coupon applied: {cartData.coupon}</p>
+              <p className="text-sm text-[#1abc9c]">{t.shop.couponApplied(cartData.coupon)}</p>
             )}
             <div className="flex justify-between text-sm font-medium text-[#04323e]">
-              <span>Total</span>
+              <span>{t.shop.total}</span>
               <span>{formatPrice(total)}</span>
             </div>
             <Link
@@ -107,7 +113,7 @@ export function CartDrawer({ open, onClose }: CartDrawerProps) {
               onClick={onClose}
               className="block w-full text-center bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold py-3 rounded-full transition-colors"
             >
-              Proceed to checkout
+              {t.shop.proceedToCheckout}
             </Link>
           </div>
         )}

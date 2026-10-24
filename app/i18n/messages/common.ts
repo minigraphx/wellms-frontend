@@ -1,0 +1,43 @@
+import type { Translation } from "../types";
+
+export const de = {
+  appName: "Kurse",
+  courses: "Kurse",
+  signIn: "Anmelden",
+  signOut: "Abmelden",
+  createAccount: "Konto erstellen",
+  loading: "Wird geladen…",
+  save: "Speichern",
+  saving: "Wird gespeichert…",
+  cancel: "Abbrechen",
+  close: "Schliessen",
+  back: "Zurück",
+  next: "Weiter",
+  previous: "Zurück",
+  search: "Suchen",
+  error: "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+  lessonCount: (n: number) => (n === 1 ? "1 Lektion" : `${n} Lektionen`),
+  language: "Sprache",
+  siteDescription: "Online-Kurse",
+};
+
+export const en: Translation<typeof de> = {
+  appName: "Courses",
+  courses: "Courses",
+  signIn: "Sign in",
+  signOut: "Sign out",
+  createAccount: "Create account",
+  loading: "Loading…",
+  save: "Save",
+  saving: "Saving…",
+  cancel: "Cancel",
+  close: "Close",
+  back: "Back",
+  next: "Next",
+  previous: "Previous",
+  search: "Search",
+  error: "Something went wrong. Please try again.",
+  lessonCount: (n: number) => (n === 1 ? "1 lesson" : `${n} lessons`),
+  language: "Language",
+  siteDescription: "Online courses",
+};

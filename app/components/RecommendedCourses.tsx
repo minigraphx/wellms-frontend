@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { API } from "@escolalms/sdk/lib";
+import { useT } from "../i18n/I18nProvider";
 
 interface Props {
   enrolledTitles: string[];
@@ -15,6 +16,7 @@ const CACHE_KEY = "ai_recommendations_v1";
 export function RecommendedCourses({ enrolledTitles, allCourses, enrolledIds }: Props) {
   const [recommended, setRecommended] = useState<API.CourseListItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     const unenrolled = allCourses.filter((c) => !enrolledIds.has(c.id));
@@ -68,8 +70,8 @@ export function RecommendedCourses({ enrolledTitles, allCourses, enrolledIds }: 
   if (loading) {
     return (
       <div className="mb-8">
-        <h2 className="text-lg font-semibold text-[#04323e] mb-3">Empfohlen für dich</h2>
-        <p className="text-sm text-gray-400 animate-pulse">KI analysiert deine Lernpräferenzen…</p>
+        <h2 className="text-lg font-semibold text-[#04323e] mb-3">{t.catalog.recommendedForYou}</h2>
+        <p className="text-sm text-gray-400 animate-pulse">{t.catalog.analyzingPreferences}</p>
       </div>
     );
   }
@@ -78,7 +80,7 @@ export function RecommendedCourses({ enrolledTitles, allCourses, enrolledIds }: 
 
   return (
     <div className="mb-8">
-      <h2 className="text-lg font-semibold text-[#04323e] mb-3">Empfohlen für dich ✨</h2>
+      <h2 className="text-lg font-semibold text-[#04323e] mb-3">{t.catalog.recommendedForYou} ✨</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {recommended.map((course) => (
           <Link

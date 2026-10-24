@@ -21,9 +21,9 @@ const makeTopic = (type: string, topicable: Record<string, unknown>): API.Topic 
   ({ id: 1, title: "Test topic", topicable_type: type, topicable } as unknown as API.Topic);
 
 describe("TopicContent", () => {
-  it("renders 'No content available' when topicable_type is missing", () => {
+  it("renders 'Kein Inhalt verfügbar' when topicable_type is missing", () => {
     render(<TopicContent topic={{ id: 1, title: "empty" } as unknown as API.Topic} />);
-    expect(screen.getByText("No content available.")).toBeInTheDocument();
+    expect(screen.getByText("Kein Inhalt verfügbar.")).toBeInTheDocument();
   });
 
   it("renders rich text content as HTML", () => {
@@ -77,6 +77,6 @@ describe("TopicContent", () => {
   it("shows unsupported message for unknown topic types", () => {
     const topic = makeTopic("unknown_type", {});
     render(<TopicContent topic={topic} />);
-    expect(screen.getByText(/not yet supported/i)).toBeInTheDocument();
+    expect(screen.getByText(/noch nicht unterstützt/i)).toBeInTheDocument();
   });
 });

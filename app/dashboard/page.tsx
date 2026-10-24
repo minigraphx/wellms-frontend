@@ -9,6 +9,7 @@ import { ProgressBar } from "../components/ProgressBar";
 import { LearningGoalWidget } from "../components/LearningGoalWidget";
 import { LearningNudge } from "../components/LearningNudge";
 import { GamificationWidget } from "../components/GamificationWidget";
+import { useT } from "../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 function getProgress(item: API.CourseProgressItem): number {
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const { user, fetchProgress, progress } = useContext(EscolaLMSContext);
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const t = useT();
 
   useEffect(() => {
     setMounted(true);
@@ -58,8 +60,8 @@ export default function DashboardPage() {
       <main className="max-w-5xl mx-auto px-4 py-12">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-[#04323e]">My courses</h1>
-            <p className="text-[#555555] mt-1">Welcome back, {user.value.first_name || user.value.email}</p>
+            <h1 className="text-3xl font-bold text-[#04323e]">{t.nav.myCourses}</h1>
+            <p className="text-[#555555] mt-1">{t.learner.dashboard.welcomeBack(user.value.first_name || user.value.email)}</p>
           </div>
           <div className="w-full sm:w-64 shrink-0 space-y-3">
             <LearningGoalWidget />
@@ -67,16 +69,16 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {progress.loading && <p className="text-gray-500">Loading…</p>}
+        {progress.loading && <p className="text-gray-500">{t.common.loading}</p>}
 
         {!progress.loading && sorted.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-gray-500 mb-4">You haven't enrolled in any courses yet.</p>
+            <p className="text-gray-500 mb-4">{t.learner.dashboard.noCourses}</p>
             <Link
               href="/"
               className="inline-block bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold px-6 py-2.5 rounded-full transition-colors"
             >
-              Browse courses
+              {t.learner.dashboard.browseCourses}
             </Link>
           </div>
         )}
@@ -94,7 +96,7 @@ export default function DashboardPage() {
                 {course.image_url ? (
                   <img src={course.image_url} alt={course.title} className="w-full h-40 object-cover" />
                 ) : (
-                  <div className="w-full h-40 bg-gray-50 flex items-center justify-center text-gray-300 text-sm">No image</div>
+                  <div className="w-full h-40 bg-gray-50 flex items-center justify-center text-gray-300 text-sm">{t.learner.dashboard.noImage}</div>
                 )}
                 <div className="p-5 flex flex-col flex-1">
                   <h2 className="font-semibold text-[#04323e] mb-1 line-clamp-2">{course.title}</h2>
@@ -107,7 +109,7 @@ export default function DashboardPage() {
                   <div className="mt-auto space-y-3">
                     <div>
                       <div className="flex justify-between text-xs text-gray-400 mb-1">
-                        <span>{isDone ? "Completed" : "In progress"}</span>
+                        <span>{isDone ? t.learner.dashboard.completed : t.learner.dashboard.inProgress}</span>
                         <span>{pct}%</span>
                       </div>
                       <ProgressBar percent={pct} />
@@ -118,14 +120,14 @@ export default function DashboardPage() {
                         href={`/courses/${course.id}/complete`}
                         className="block w-full text-center border border-[#1abc9c] text-[#1abc9c] hover:bg-[#1abc9c]/5 font-semibold py-2 rounded-full text-sm transition-colors"
                       >
-                        View certificate
+                        {t.learner.dashboard.viewCertificate}
                       </Link>
                     ) : (
                       <Link
                         href={resumeTopicId ? `/courses/${course.id}/topics/${resumeTopicId}` : `/courses/${course.id}`}
                         className="block w-full text-center bg-[#1abc9c] hover:bg-[#15a288] text-white font-semibold py-2 rounded-full text-sm transition-colors"
                       >
-                        {pct === 0 ? "Start" : "Continue"}
+                        {pct === 0 ? t.learner.dashboard.start : t.learner.dashboard.continue}
                       </Link>
                     )}
                   </div>

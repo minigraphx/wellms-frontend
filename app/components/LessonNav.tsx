@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { API } from "@escolalms/sdk/lib";
+import { useFormat, useT } from "../i18n/I18nProvider";
 
 function TopicLink({
   topic,
@@ -57,10 +58,6 @@ function isDripLocked(lesson: API.Lesson): boolean {
   return new Date(lesson.active_from) > new Date();
 }
 
-function formatUnlockDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-}
-
 function LessonGroup({
   lesson,
   courseId,
@@ -81,6 +78,8 @@ function LessonGroup({
     lesson.lessons?.some((l) => l.topics?.some((t) => t.id === activeTopicId));
   const [open, setOpen] = useState(containsActive ?? depth === 0);
   const drip = isEnrolled && isDripLocked(lesson);
+  const t = useT();
+  const { date } = useFormat();
 
   if (drip) {
     return (
@@ -90,7 +89,7 @@ function LessonGroup({
           <span>{lesson.title}</span>
         </div>
         <p className="px-2 pb-2 text-xs text-gray-400">
-          Unlocks {formatUnlockDate(lesson.active_from!)}
+          {t.player.lessonNav.unlocks(date(lesson.active_from!, { month: "short", day: "numeric", year: "numeric" }))}
         </p>
       </div>
     );
@@ -151,6 +150,7 @@ export function LessonNav({
   progress: number;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+  const t = useT();
 
   return (
     <aside className={`flex flex-col bg-white border-r border-gray-100 h-screen sticky top-0 transition-all duration-200 ${collapsed ? "w-12" : "w-72"}`}>
@@ -172,7 +172,7 @@ export function LessonNav({
         <>
           <div className="px-4 py-3 border-b border-gray-100 shrink-0">
             <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-              <span>Progress</span>
+              <span>{t.player.lessonNav.progress}</span>
               <span className="text-[#1abc9c] font-medium">{progress}%</span>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
 import { useToast } from "../components/Toast";
+import { useFormat, useT } from "../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 function SectionFeedback({ success, error }: { success: string; error: string }) {
@@ -18,6 +19,9 @@ export default function ProfilePage() {
     useContext(EscolaLMSContext);
   const router = useRouter();
   const { toast } = useToast();
+  const t = useT();
+  const { date } = useFormat();
+  const tp = t.learner.profile;
   const [mounted, setMounted] = useState(false);
 
   // Personal details
@@ -85,12 +89,12 @@ export default function ProfilePage() {
     try {
       const res = await updateProfile(details);
       if (res.success) {
-        setDetailsSuccess("Profile updated.");
+        setDetailsSuccess(tp.profileUpdated);
       } else {
-        setDetailsError("Failed to update profile.");
+        setDetailsError(tp.profileFailed);
       }
     } catch {
-      setDetailsError("Failed to update profile.");
+      setDetailsError(tp.profileFailed);
     } finally {
       setDetailsLoading(false);
     }
@@ -101,24 +105,24 @@ export default function ProfilePage() {
     setPwdSuccess("");
     setPwdError("");
     if (pwd.new_password !== pwd.new_confirm_password) {
-      setPwdError("Passwords do not match.");
+      setPwdError(tp.passwordsDontMatch);
       return;
     }
     if (pwd.new_password.length < 8) {
-      setPwdError("New password must be at least 8 characters.");
+      setPwdError(tp.passwordTooShort);
       return;
     }
     setPwdLoading(true);
     try {
       const res = await changePassword(pwd);
       if (res.success) {
-        setPwdSuccess("Password changed.");
+        setPwdSuccess(tp.passwordChanged);
         setPwd({ current_password: "", new_password: "", new_confirm_password: "" });
       } else {
-        setPwdError((res as any)?.data?.message || "Incorrect current password.");
+        setPwdError((res as any)?.data?.message || tp.incorrectPassword);
       }
     } catch {
-      setPwdError("Failed to change password.");
+      setPwdError(tp.passwordFailed);
     } finally {
       setPwdLoading(false);
     }
@@ -139,12 +143,12 @@ export default function ProfilePage() {
     try {
       const res = await updateAvatar(file);
       if (res.success) {
-        setAvatarSuccess("Avatar updated.");
+        setAvatarSuccess(tp.avatarUpdated);
       } else {
-        setAvatarError("Failed to upload avatar.");
+        setAvatarError(tp.avatarFailed);
       }
     } catch {
-      setAvatarError("Failed to upload avatar.");
+      setAvatarError(tp.avatarFailed);
     } finally {
       setAvatarLoading(false);
     }
@@ -155,13 +159,13 @@ export default function ProfilePage() {
     try {
       await cancelSubscription(productId);
       setMyProducts((prev) => prev.filter((p) => Number(p.id) !== productId));
-      toast("Subscription cancelled.");
+      toast(tp.subscriptionCancelled);
     } catch {
-      toast("Failed to cancel subscription.", "error");
+      toast(tp.subscriptionCancelFailed, "error");
     } finally {
       setSubCancelling(null);
     }
-  }, [cancelSubscription, toast]);
+  }, [cancelSubscription, toast, tp]);
 
   const activeSubscriptions = myProducts.filter((p) => p.subscription_period);
 
@@ -172,17 +176,17 @@ export default function ProfilePage() {
     <>
       <Nav />
       <main className="max-w-2xl mx-auto px-4 py-12 space-y-10">
-        <h1 className="text-3xl font-bold text-[#04323e]">Profile</h1>
+        <h1 className="text-3xl font-bold text-[#04323e]">{tp.title}</h1>
 
         {/* Avatar */}
         <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#04323e] mb-5">Photo</h2>
+          <h2 className="text-lg font-semibold text-[#04323e] mb-5">{tp.photo}</h2>
           <div className="flex items-center gap-6">
             <div className="shrink-0">
               {avatarPreview || (u as any).avatar ? (
                 <img
                   src={avatarPreview ?? (u as any).avatar}
-                  alt="Avatar"
+                  alt={tp.avatarAlt}
                   className="w-20 h-20 rounded-full object-cover border-2 border-gray-100"
                 />
               ) : (
@@ -204,7 +208,7 @@ export default function ProfilePage() {
                 htmlFor="avatar-input"
                 className="inline-block cursor-pointer border border-gray-200 text-sm font-medium text-[#555555] hover:border-[#1abc9c] hover:text-[#1abc9c] px-4 py-2 rounded-full transition-colors"
               >
-                Choose photo
+                {tp.choosePhoto}
               </label>
               {avatarPreview && (
                 <button
@@ -212,7 +216,7 @@ export default function ProfilePage() {
                   disabled={avatarLoading}
                   className="block bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
                 >
-                  {avatarLoading ? "Uploading…" : "Save photo"}
+                  {avatarLoading ? tp.uploading : tp.savePhoto}
                 </button>
               )}
               <SectionFeedback success={avatarSuccess} error={avatarError} />
@@ -222,11 +226,11 @@ export default function ProfilePage() {
 
         {/* Personal details */}
         <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#04323e] mb-5">Personal details</h2>
+          <h2 className="text-lg font-semibold text-[#04323e] mb-5">{tp.personalDetails}</h2>
           <form onSubmit={handleDetailsSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>First name</label>
+                <label className={labelClass}>{tp.firstName}</label>
                 <input
                   type="text"
                   value={details.first_name}
@@ -235,7 +239,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Last name</label>
+                <label className={labelClass}>{tp.lastName}</label>
                 <input
                   type="text"
                   value={details.last_name}
@@ -245,7 +249,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div>
-              <label className={labelClass}>Phone</label>
+              <label className={labelClass}>{tp.phone}</label>
               <input
                 type="tel"
                 value={details.phone}
@@ -255,7 +259,7 @@ export default function ProfilePage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Country</label>
+                <label className={labelClass}>{tp.country}</label>
                 <input
                   type="text"
                   value={details.country}
@@ -264,7 +268,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className={labelClass}>City</label>
+                <label className={labelClass}>{tp.city}</label>
                 <input
                   type="text"
                   value={details.city}
@@ -279,7 +283,7 @@ export default function ProfilePage() {
               disabled={detailsLoading}
               className="bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
             >
-              {detailsLoading ? "Saving…" : "Save changes"}
+              {detailsLoading ? t.common.saving : tp.saveChanges}
             </button>
           </form>
         </section>
@@ -287,15 +291,15 @@ export default function ProfilePage() {
         {/* Subscriptions */}
         {activeSubscriptions.length > 0 && (
           <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-[#04323e] mb-5">Subscriptions</h2>
+            <h2 className="text-lg font-semibold text-[#04323e] mb-5">{tp.subscriptions}</h2>
             <ul className="space-y-4">
               {activeSubscriptions.map((p) => (
                 <li key={p.id} className="flex items-center justify-between gap-4 border-b border-gray-50 pb-4 last:border-0 last:pb-0">
                   <div>
                     <p className="font-medium text-[#04323e]">{p.name}</p>
                     <p className="text-sm text-gray-400">
-                      Renews {p.subscription_period}
-                      {p.end_date && ` · Expires ${new Date(p.end_date).toLocaleDateString()}`}
+                      {tp.renews(String(p.subscription_period))}
+                      {p.end_date && tp.expires(date(p.end_date))}
                     </p>
                   </div>
                   <button
@@ -303,7 +307,7 @@ export default function ProfilePage() {
                     disabled={subCancelling === Number(p.id)}
                     className="text-sm font-medium text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors shrink-0"
                   >
-                    {subCancelling === Number(p.id) ? "Cancelling…" : "Cancel"}
+                    {subCancelling === Number(p.id) ? tp.cancelling : tp.cancelSubscription}
                   </button>
                 </li>
               ))}
@@ -313,10 +317,10 @@ export default function ProfilePage() {
 
         {/* Change password */}
         <section className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#04323e] mb-5">Change password</h2>
+          <h2 className="text-lg font-semibold text-[#04323e] mb-5">{tp.changePassword}</h2>
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
             <div>
-              <label className={labelClass}>Current password</label>
+              <label className={labelClass}>{tp.currentPassword}</label>
               <input
                 type="password"
                 value={pwd.current_password}
@@ -326,7 +330,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className={labelClass}>New password</label>
+              <label className={labelClass}>{tp.newPassword}</label>
               <input
                 type="password"
                 value={pwd.new_password}
@@ -336,7 +340,7 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className={labelClass}>Confirm new password</label>
+              <label className={labelClass}>{tp.confirmNewPassword}</label>
               <input
                 type="password"
                 value={pwd.new_confirm_password}
@@ -351,7 +355,7 @@ export default function ProfilePage() {
               disabled={pwdLoading}
               className="bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
             >
-              {pwdLoading ? "Updating…" : "Update password"}
+              {pwdLoading ? tp.updating : tp.updatePassword}
             </button>
           </form>
         </section>

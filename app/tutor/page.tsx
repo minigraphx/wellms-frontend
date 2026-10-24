@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { Nav } from "../components/Nav";
+import { useFormat, useT } from "../i18n/I18nProvider";
 import type { API } from "@escolalms/sdk/lib";
 
 function isTutor(u: API.UserAsProfile | null): boolean {
@@ -20,8 +21,17 @@ function isTutor(u: API.UserAsProfile | null): boolean {
   return false;
 }
 
+// Known booking statuses get a translated label; anything else from the API is shown as is.
+function statusLabel(status: string | undefined, labels: Record<"pending" | "approved" | "rejected", string>): string {
+  if (!status) return labels.pending;
+  return Object.hasOwn(labels, status) ? labels[status as keyof typeof labels] : status;
+}
+
 export default function TutorPage() {
   const router = useRouter();
+  const t = useT();
+  const { date } = useFormat();
+  const tt = t.learner.tutor;
   const ctx = useContext(EscolaLMSContext);
   const { user, fetchTutorConsultations } = ctx;
   const fetchMyAuthoredCourses = (ctx as any).fetchMyAuthoredCourses as
@@ -110,15 +120,15 @@ export default function TutorPage() {
       <Nav />
       <main className="max-w-5xl mx-auto px-4 py-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#04323e]">Tutor-Dashboard</h1>
-          <p className="text-[#555555] mt-1">Willkommen, {u.first_name || u.email}</p>
+          <h1 className="text-3xl font-bold text-[#04323e]">{tt.title}</h1>
+          <p className="text-[#555555] mt-1">{tt.welcome(u.first_name || u.email)}</p>
         </div>
 
         {(aiTip || tipLoading) && (
           <div className="mb-8 rounded-xl border border-[#1abc9c]/30 bg-[#1abc9c]/5 px-5 py-4">
-            <p className="text-xs font-semibold text-[#1abc9c] mb-1">KI-Coaching-Tipp</p>
+            <p className="text-xs font-semibold text-[#1abc9c] mb-1">{tt.aiTip}</p>
             {tipLoading ? (
-              <p className="text-sm text-gray-400 animate-pulse">KI generiert Tipp…</p>
+              <p className="text-sm text-gray-400 animate-pulse">{tt.aiTipLoading}</p>
             ) : (
               <p className="text-sm text-[#04323e] leading-relaxed">{aiTip}</p>
             )}
@@ -128,10 +138,10 @@ export default function TutorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Authored courses */}
           <section>
-            <h2 className="text-lg font-semibold text-[#04323e] mb-4">Meine Kurse</h2>
-            {loading && <p className="text-sm text-gray-400">Lädt…</p>}
+            <h2 className="text-lg font-semibold text-[#04323e] mb-4">{tt.myCourses}</h2>
+            {loading && <p className="text-sm text-gray-400">{t.common.loading}</p>}
             {!loading && courses.length === 0 && (
-              <p className="text-sm text-gray-400">Keine Kurse gefunden.</p>
+              <p className="text-sm text-gray-400">{tt.noCourses}</p>
             )}
             <ul className="space-y-3">
               {courses.map((course) => (
@@ -154,7 +164,7 @@ export default function TutorPage() {
                     </Link>
                     {(course as any).users_count !== undefined && (
                       <p className="text-xs text-gray-400 mt-0.5">
-                        {(course as any).users_count} Teilnehmer
+                        {tt.participants(Number((course as any).users_count))}
                       </p>
                     )}
                   </div>
@@ -165,10 +175,10 @@ export default function TutorPage() {
 
           {/* Consultation bookings */}
           <section>
-            <h2 className="text-lg font-semibold text-[#04323e] mb-4">Buchungsanfragen</h2>
-            {loading && <p className="text-sm text-gray-400">Lädt…</p>}
+            <h2 className="text-lg font-semibold text-[#04323e] mb-4">{tt.bookings}</h2>
+            {loading && <p className="text-sm text-gray-400">{t.common.loading}</p>}
             {!loading && consultations.length === 0 && (
-              <p className="text-sm text-gray-400">Keine offenen Buchungsanfragen.</p>
+              <p className="text-sm text-gray-400">{tt.noBookings}</p>
             )}
             <ul className="space-y-3">
               {consultations.map((term, i) => (
@@ -177,12 +187,12 @@ export default function TutorPage() {
                   className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm"
                 >
                   <p className="text-sm font-semibold text-[#04323e]">
-                    {(term as any).consultation?.title ?? "Konsultation"}
+                    {(term as any).consultation?.title ?? tt.consultation}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {(term as any).date
-                      ? new Date((term as any).date).toLocaleString("de-DE")
-                      : "Datum ausstehend"}
+                      ? date((term as any).date, { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                      : tt.datePending}
                   </p>
                   <p className={`text-xs mt-1 font-medium ${
                     (term as any).status === "approved"
@@ -191,7 +201,7 @@ export default function TutorPage() {
                       ? "text-red-500"
                       : "text-amber-500"
                   }`}>
-                    {(term as any).status ?? "ausstehend"}
+                    {statusLabel((term as any).status, tt.status)}
                   </p>
                 </li>
               ))}

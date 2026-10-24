@@ -3,6 +3,7 @@
 import { useContext, useState } from "react";
 import Link from "next/link";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
+import { useT } from "../i18n/I18nProvider";
 
 export function ForgotPasswordForm() {
   const { forgot } = useContext(EscolaLMSContext);
@@ -10,6 +11,7 @@ export function ForgotPasswordForm() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const t = useT();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,10 +25,10 @@ export function ForgotPasswordForm() {
       if (res.success) {
         setSent(true);
       } else {
-        setError("Something went wrong. Please try again.");
+        setError(t.common.error);
       }
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError(t.common.error);
     } finally {
       setLoading(false);
     }
@@ -40,18 +42,22 @@ export function ForgotPasswordForm() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <p className="text-[#04323e] font-semibold">Check your email</p>
-        <p className="text-sm text-gray-500">We sent a password reset link to <strong>{email}</strong></p>
-        <Link href="/" className="block text-sm text-[#1abc9c] hover:underline">Back to sign in</Link>
+        <p className="text-[#04323e] font-semibold">{t.auth.checkYourEmail}</p>
+        <p className="text-sm text-gray-500">
+          {t.auth.resetLinkSentPrefix}
+          <strong>{email}</strong>
+          {t.auth.resetLinkSentSuffix}
+        </p>
+        <Link href="/" className="block text-sm text-[#1abc9c] hover:underline">{t.auth.backToSignIn}</Link>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <p className="text-sm text-gray-500">Enter your email and we'll send you a reset link.</p>
+      <p className="text-sm text-gray-500">{t.auth.forgotIntro}</p>
       <div>
-        <label className="block text-sm font-medium text-[#04323e] mb-1">Email</label>
+        <label className="block text-sm font-medium text-[#04323e] mb-1">{t.auth.email}</label>
         <input
           type="email"
           value={email}
@@ -66,10 +72,10 @@ export function ForgotPasswordForm() {
         disabled={loading}
         className="w-full bg-[#1abc9c] hover:bg-[#15a288] disabled:opacity-50 text-white font-semibold py-2.5 rounded-full transition-colors"
       >
-        {loading ? "Sending…" : "Send reset link"}
+        {loading ? t.auth.sending : t.auth.sendResetLink}
       </button>
       <p className="text-center text-sm text-gray-400">
-        <Link href="/" className="text-[#1abc9c] hover:underline">Back to sign in</Link>
+        <Link href="/" className="text-[#1abc9c] hover:underline">{t.auth.backToSignIn}</Link>
       </p>
     </form>
   );

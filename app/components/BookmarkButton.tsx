@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { EscolaLMSContext } from "@escolalms/sdk/lib/react/context";
 import { BookmarkableType } from "@escolalms/sdk/lib/types/enums";
 import type { API } from "@escolalms/sdk/lib";
+import { useT } from "../i18n/I18nProvider";
 
 interface Props {
   topicId: number;
@@ -17,6 +18,8 @@ export function BookmarkButton({ topicId }: Props) {
   const [note, setNote] = useState("");
   const [showNote, setShowNote] = useState(false);
   const [saving, setSaving] = useState(false);
+  const t = useT();
+  const text = t.player.bookmark;
 
   useEffect(() => {
     if (!user.value) return;
@@ -77,14 +80,14 @@ export function BookmarkButton({ topicId }: Props) {
       <button
         onClick={handleToggle}
         disabled={saving}
-        aria-label={bookmark ? "Remove bookmark" : "Bookmark this lesson"}
-        title={bookmark ? "Remove bookmark" : "Bookmark this lesson"}
+        aria-label={bookmark ? text.remove : text.add}
+        title={bookmark ? text.remove : text.add}
         className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
           bookmark ? "text-[#f2c94c]" : "text-gray-400 hover:text-[#f2c94c]"
         }`}
       >
         <span className="text-lg">{bookmark ? "★" : "☆"}</span>
-        <span className="hidden sm:inline">{bookmark ? "Bookmarked" : "Bookmark"}</span>
+        <span className="hidden sm:inline">{bookmark ? text.bookmarked : text.bookmark}</span>
       </button>
 
       {bookmark && (
@@ -92,7 +95,7 @@ export function BookmarkButton({ topicId }: Props) {
           onClick={() => setShowNote((v) => !v)}
           className="ml-2 text-xs text-gray-400 hover:text-[#1abc9c] transition-colors"
         >
-          {showNote ? "Hide note" : (bookmark as any)?.value ? "Edit note" : "Add note"}
+          {showNote ? text.hideNote : (bookmark as any)?.value ? text.editNote : text.addNote}
         </button>
       )}
 
@@ -102,7 +105,7 @@ export function BookmarkButton({ topicId }: Props) {
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            placeholder="Add a personal note…"
+            placeholder={text.notePlaceholder}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1abc9c] resize-none"
             autoFocus
           />
@@ -111,14 +114,14 @@ export function BookmarkButton({ topicId }: Props) {
               onClick={() => setShowNote(false)}
               className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-full border border-gray-200"
             >
-              Cancel
+              {t.common.cancel}
             </button>
             <button
               onClick={handleSaveNote}
               disabled={saving}
               className="text-xs font-semibold bg-[#1abc9c] hover:bg-[#15a288] text-white px-3 py-1.5 rounded-full disabled:opacity-50 transition-colors"
             >
-              {saving ? "Saving…" : "Save"}
+              {saving ? t.common.saving : t.common.save}
             </button>
           </div>
         </div>
